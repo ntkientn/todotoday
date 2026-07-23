@@ -871,27 +871,51 @@
         const board = appState.dailyBoards[appState.selectedDate];
         let totalDoneHours = 0;
 
+        // ĐỂ TEST: Thay `new Date().getHours()` thành số cứng (vd: 9, 14, 20)
+        const currentHour = new Date().getHours();
+        
+        let currentSession = 'evening'; 
+        if (currentHour >= 0 && currentHour < 12) currentSession = 'morning';
+        else if (currentHour >= 12 && currentHour < 18) currentSession = 'afternoon';
+
+        const isToday = appState.selectedDate === getLocalTodayString();
+        const isPastDay = appState.selectedDate < getLocalTodayString();
+
         ['morning', 'afternoon', 'evening'].forEach(session => {
+            let isPastSession = false;
+            let isCurrentSession = isToday && (session === currentSession);
+            
+            if (isPastDay) {
+                isPastSession = true; 
+            } else if (isToday) {
+                if (currentSession === 'afternoon' && session === 'morning') isPastSession = true;
+                if (currentSession === 'evening' && (session === 'morning' || session === 'afternoon')) isPastSession = true;
+            }
+
             const calcs = getSessionTimeCalculations(session);
-            // --- ĐOẠN CODE CHÈN THÊM ĐỂ ĐỔI MÀU NỀN THEO HÌNH ANH GỬI ---
-           const container = document.getElementById(`tasks-${session}`);
-            // Tìm block cha bọc bên ngoài của từng khối buổi
+            const container = document.getElementById(`tasks-${session}`);
             const sessionBlock = container?.closest('.rounded-2xl') || container?.parentElement;
             
             if (sessionBlock) {
-                // Xóa sạch các class background và border cũ để ép màu chuẩn theo Tailwind
-                sessionBlock.className = sessionBlock.className.replace(/bg-\S+|border-\S+/g, '').trim();
+                // Xóa sạch các class viền, bóng, nền, độ mờ cũ
+                sessionBlock.className = sessionBlock.className.replace(/bg-\S+|border-\S+|ring-\S+|shadow-\S+|scale-\S+|opacity-\S+/g, '').trim();
                 
-                // Nạp lại hệ màu nguyên bản chuẩn xác
-                if (session === 'morning') {
-                    sessionBlock.classList.add('bg-amber-50/50', 'border', 'border-amber-200/70');
-                } else if (session === 'afternoon') {
-                    sessionBlock.classList.add('bg-sky-50/50', 'border', 'border-sky-200/70');
-                } else if (session === 'evening') {
-                    sessionBlock.classList.add('bg-indigo-100/50', 'border', 'border-indigo-200/70');
+                sessionBlock.classList.add('transition-all', 'duration-300', 'border');
+
+                // 1. ÁP DỤNG MÀU NỀN VÀ VIỀN GỐC CHO TẤT CẢ CÁC KHỐI (Không có khối nào bị tẩy trắng)
+                if (session === 'morning') sessionBlock.classList.add('bg-amber-50/50', 'border-amber-200/70');
+                else if (session === 'afternoon') sessionBlock.classList.add('bg-sky-50/50', 'border-sky-200/70');
+                else if (session === 'evening') sessionBlock.classList.add('bg-indigo-100/50', 'border-indigo-200/70');
+
+                // 2. KHỐI HIỆN TẠI: Chỉ thêm viền nhấn mí trên và bóng đổ để nổi bật lên trên nền gốc
+                if (isCurrentSession) {
+                    sessionBlock.classList.add('shadow-sm', 'border-t-4');
+                    
+                    if (session === 'morning') sessionBlock.classList.add('border-t-amber-400');
+                    else if (session === 'afternoon') sessionBlock.classList.add('border-t-sky-400');
+                    else if (session === 'evening') sessionBlock.classList.add('border-t-purple-400');
                 }
             }
-            // --------------------------------------------------
 
             const limit = TIME_LIMITS[session];
             const left = Math.max(limit - calcs.total, 0);
@@ -910,20 +934,45 @@
                 for (let i = 0.5; i <= left; i += 0.5) selectEl.innerHTML += `<option value="${i}">${i}h</option>`;
             }
 
-            // Clear danh sách để render task
             container.innerHTML = "";
 
             if (!board[session] || board[session].length === 0) {
                 container.innerHTML = `<div class="bg-white/60 border border-dashed border-slate-200/60 rounded-xl p-4 text-center text-sm text-slate-400 my-1 italic">${isVi?'Trống / Chưa lên kế hoạch':'Empty / Unplanned'}</div>`;
             } else {
                 board[session].forEach(t => {
+                    // UI HOÀN TOÀN PHẲNG CHO THẺ TASK
+                    let cardColorClass = "";
+                    let titleColorClass = "";
+                    let descColorClass = "";
+
+                    if (t.completed) {
+                        // Task đã xong: Bỏ viền, nền trong suốt nhẹ
+                        cardColorClass = "bg-white/40 opacity-60";
+                        titleColorClass = "line-through text-slate-400 font-medium";
+                        descColorClass = "text-slate-300";
+                    } else {
+                        // Task chưa xong: Ô trắng sáng phẳng
+                        cardColorClass = "bg-white"; 
+                        
+                        if (isPastSession) {
+                            titleColorClass = "text-rose-400 font-medium";
+                            descColorClass = "text-rose-300";
+                        } else if (isCurrentSession) {
+                            titleColorClass = "text-indigo-700 font-bold";
+                            descColorClass = "text-slate-500";
+                        } else {
+                            titleColorClass = "text-slate-700 font-medium";
+                            descColorClass = "text-slate-400";
+                        }
+                    }
+
                     container.innerHTML += `
-                        <div class="flex items-start justify-between bg-white border border-slate-100 p-3 rounded-xl hover:scale-[1.01] transition-all w-full shadow-2xs">
+                        <div class="flex items-start justify-between p-3 rounded-xl hover:bg-slate-50/80 transition-colors w-full ${cardColorClass} mb-2">
                             <div class="flex items-start gap-2.5 min-w-0 flex-1">
                                 <input type="checkbox" ${t.completed?'checked':''} onclick="toggleTask('${session}','${t.id}')" class="mt-0.5 rounded text-indigo-600 h-4 w-4 cursor-pointer shrink-0 border-slate-300 bg-white focus:ring-indigo-500" />
                                 <div class="min-w-0 flex-1">
-                                    <h4 class="text-sm font-semibold ${t.completed?'line-through text-slate-400':'text-slate-700'} break-words">${t.title}</h4>
-                                    ${t.desc ? `<p class="text-xs ${t.completed?'text-slate-300':'text-slate-500'} break-words mt-0.5">${t.desc}</p>` : ''}
+                                    <h4 class="text-sm ${titleColorClass} break-words transition-colors">${t.title}</h4>
+                                    ${t.desc ? `<p class="text-xs ${descColorClass} break-words mt-0.5 transition-colors">${t.desc}</p>` : ''}
                                 </div>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0 ml-2">
@@ -941,11 +990,6 @@
         document.getElementById('progress-bar').style.width = `${totalScore}%`;
 
         const statusText = document.getElementById('target-status');
-        if (totalScore >= 90) statusText.innerText = isVi ? "🏆 Tuyệt vời! Hiệu suất khủng này sẽ đưa bạn đến đỉnh cao." : "🏆 Outstanding! This level of performance drives peak productivity.";
-        else if (totalScore >= 70) statusText.innerText = isVi ? "🚀 Rất tốt, bạn gần chạm đến thành công rồi đó!" : "🚀 Really good pace, reaching success soon!";
-        else if (totalScore >= 40) statusText.innerText = isVi ? "🔥 Khá tốt, cố lên, thành tựu đang chờ đón người kỷ luật và tập trung như bạn." : "🔥 Pretty good, keep it up! Success awaits someone as disciplined and focused as you.";
-        else statusText.innerText = isVi ? "⚡ Chưa lên kế hoạch hoặc tiến độ thấp. Cần hành động ngay!" : "⚡ No plan or Low progress. Need action!";
-        
         if (totalScore >= 90) {
             statusText.innerText = isVi 
                 ? "🏆 Quá đỉnh! Bạn đã chinh phục trọn vẹn mục tiêu hôm nay. Hiệu suất khủng này sẽ đưa bạn đến đỉnh cao!" 
