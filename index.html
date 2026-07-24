@@ -871,8 +871,8 @@
         const board = appState.dailyBoards[appState.selectedDate];
         let totalDoneHours = 0;
 
-        // ĐỂ TEST: Thay `new Date().getHours()` thành số cứng (vd: 9, 14, 20)
-        const currentHour = new Date().getHours();
+        // ĐỂ TEST GIAO DIỆN CÁC BUỔI: Tạm thời sửa `new Date().getHours()` thành 9, 14, hoặc 20
+        const currentHour = 1;
         
         let currentSession = 'evening'; 
         if (currentHour >= 0 && currentHour < 12) currentSession = 'morning';
@@ -897,23 +897,52 @@
             const sessionBlock = container?.closest('.rounded-2xl') || container?.parentElement;
             
             if (sessionBlock) {
-                // Xóa sạch các class viền, bóng, nền, độ mờ cũ
-                sessionBlock.className = sessionBlock.className.replace(/bg-\S+|border-\S+|ring-\S+|shadow-\S+|scale-\S+|opacity-\S+/g, '').trim();
+                // Lọc và xóa sạch class viền, bóng, nền một cách an toàn tuyệt đối
+                const classesToKeep = sessionBlock.className.split(' ').filter(c => {
+                    if (c.startsWith('bg-') || c.startsWith('border-') || c.startsWith('ring-') || c.startsWith('shadow') || c.startsWith('scale-')) return false;
+                    if (c === 'border') return false; 
+                    return true;
+                });
+                sessionBlock.className = classesToKeep.join(' ');
                 
                 sessionBlock.classList.add('transition-all', 'duration-300', 'border');
 
-                // 1. ÁP DỤNG MÀU NỀN VÀ VIỀN GỐC CHO TẤT CẢ CÁC KHỐI (Không có khối nào bị tẩy trắng)
-                if (session === 'morning') sessionBlock.classList.add('bg-amber-50/50', 'border-amber-200/70');
-                else if (session === 'afternoon') sessionBlock.classList.add('bg-sky-50/50', 'border-sky-200/70');
-                else if (session === 'evening') sessionBlock.classList.add('bg-indigo-100/50', 'border-indigo-200/70');
+                // Reset mọi style inline cũ
+                sessionBlock.style.boxShadow = '';
+                sessionBlock.style.transform = '';
+                sessionBlock.style.borderColor = '';
+                sessionBlock.style.borderTop = '';
 
-                // 2. KHỐI HIỆN TẠI: Chỉ thêm viền nhấn mí trên và bóng đổ để nổi bật lên trên nền gốc
-                if (isCurrentSession) {
-                    sessionBlock.classList.add('shadow-sm', 'border-t-4');
-                    
-                    if (session === 'morning') sessionBlock.classList.add('border-t-amber-400');
-                    else if (session === 'afternoon') sessionBlock.classList.add('border-t-sky-400');
-                    else if (session === 'evening') sessionBlock.classList.add('border-t-purple-400');
+                // ÁP DỤNG NỀN VÀ ÉP HIGHLIGHT BẰNG INLINE STYLE (Chống tàng hình 100%)
+                if (session === 'morning') {
+                    sessionBlock.classList.add('bg-amber-50/50');
+                    if (isCurrentSession) {
+                        sessionBlock.style.borderColor = '#fbbf24'; // Viền vàng đậm hơn
+                        sessionBlock.style.boxShadow = 'inset 0 4px 0 0 #f59e0b, 0 10px 15px -3px rgba(0,0,0,0.05)'; // Mí trên siêu nét + đổ bóng nhẹ
+                        sessionBlock.style.transform = 'translateY(-2px)'; // Hơi nhấc khối lên
+                    } else {
+                        sessionBlock.style.borderColor = '#fde68a'; // Viền vàng nhạt
+                    }
+                } 
+                else if (session === 'afternoon') {
+                    sessionBlock.classList.add('bg-sky-50/50');
+                    if (isCurrentSession) {
+                        sessionBlock.style.borderColor = '#38bdf8'; 
+                        sessionBlock.style.boxShadow = 'inset 0 4px 0 0 #0ea5e9, 0 10px 15px -3px rgba(0,0,0,0.05)'; 
+                        sessionBlock.style.transform = 'translateY(-2px)';
+                    } else {
+                        sessionBlock.style.borderColor = '#bae6fd'; 
+                    }
+                } 
+                else if (session === 'evening') {
+                    sessionBlock.classList.add('bg-indigo-100/50');
+                    if (isCurrentSession) {
+                        sessionBlock.style.borderColor = '#a855f7'; 
+                        sessionBlock.style.boxShadow = 'inset 0 4px 0 0 #9333ea, 0 10px 15px -3px rgba(0,0,0,0.05)'; 
+                        sessionBlock.style.transform = 'translateY(-2px)';
+                    } else {
+                        sessionBlock.style.borderColor = '#e9d5ff'; 
+                    }
                 }
             }
 
@@ -946,12 +975,10 @@
                     let descColorClass = "";
 
                     if (t.completed) {
-                        // Task đã xong: Bỏ viền, nền trong suốt nhẹ
                         cardColorClass = "bg-white/40 opacity-60";
                         titleColorClass = "line-through text-slate-400 font-medium";
                         descColorClass = "text-slate-300";
                     } else {
-                        // Task chưa xong: Ô trắng sáng phẳng
                         cardColorClass = "bg-white"; 
                         
                         if (isPastSession) {
