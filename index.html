@@ -872,7 +872,7 @@
         let totalDoneHours = 0;
 
         // ĐỂ TEST GIAO DIỆN CÁC BUỔI: Tạm thời sửa `new Date().getHours()` thành 9, 14, hoặc 20
-        const currentHour = 1;
+        const currentHour = new Date().getHours();
         
         let currentSession = 'evening'; 
         if (currentHour >= 0 && currentHour < 12) currentSession = 'morning';
