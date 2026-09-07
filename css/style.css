@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;900&display=swap');
+body { font-family: 'Inter', sans-serif; }
+.custom-date-input::-webkit-calendar-picker-indicator {
+    background: transparent; bottom: 0; color: transparent; cursor: pointer;
+    height: auto; left: 0; position: absolute; right: 0; top: 0; width: auto;
+}
+
+/* HIỆU ỨNG FOCUS HIGHLIGHT */
+@media (max-width: 768px) {
+    .grid:has(#tasks-morning) > div {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: opacity, transform, box-shadow;
+    }
+    .grid:has(#tasks-morning):has(input:focus, select:focus) > div {
+        opacity: 0.3; filter: grayscale(30%);
+    }
+    .grid:has(#tasks-morning) > div:focus-within {
+        opacity: 1 !important; filter: grayscale(0%) !important;
+        transform: scale(1.03);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        border-color: rgba(0, 0, 0, 0.15) !important;
+        position: relative; z-index: 50;
+    }
+}
