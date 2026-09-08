@@ -14,11 +14,11 @@
 
     <div class="w-full flex bg-white border-b border-slate-200/80 px-4 py-2.5 gap-2 flex justify-between items-center shadow-sm">
         <a href="https://ntkientn.github.io/webnet/" class="px-2 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all flex items-center gap-1">
-            <span class="text-slate-300">❮</span> Back to WebNet
+            <span class="text-slate-300"></span> Back to WebNet
         </a>
         <div class="flex items-center gap-2">
             <button id="lang-btn" onclick="toggleLanguage()" class="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all cursor-pointer">
-                English 🌐
+                EN
             </button>
             <button id="auth-btn" onclick="openAuthDrawer()" class="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1.5">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -44,16 +44,9 @@
                 <span class="text-3xl font-black tracking-tight bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">TodoToday</span>
             </div>
 
-            <div class="relative inline-block">
-                <button onclick="toggleTooltip(event)" class="w-7 h-7 bg-slate-200 hover:bg-indigo-500 text-slate-600 hover:text-white rounded-full font-bold text-sm shadow-sm transition-all flex items-center justify-center cursor-pointer animate-pulse focus:outline-none">?</button>
-                <div id="hint-tooltip" class="hidden absolute right-0 sm:right-auto sm:left-1/2 translate-x-0 sm:-translate-x-1/2 top-9 w-72 bg-slate-900 text-white text-xs rounded-xl p-3.5 shadow-xl z-50 line-relaxed space-y-1.5 border border-slate-800">
-                    <div class="font-bold text-indigo-400 flex items-center gap-1">💡 Hướng dẫn sử dụng:</div>
-                    <p data-vi="TodoToday là công cụ giúp bạn lên kế hoạch và tập trung hoàn thành những công việc quan trọng nhất trong ngày. Bạn còn có thể lưu lại lịch sử và theo dõi hiệu suất công việc của mình trên biểu đồ theo khung thời gian tùy chỉnh.">TodoToday là công cụ giúp bạn lên kế hoạch và tập trung hoàn thành những công việc quan trọng nhất trong 1 ngày.</p>
-                    <p>1. Chọn ngày làm việc và phân bổ công việc vào 3 buổi Sáng (4h), Chiều (4h), Tối (2h) cho đủ Quỹ thời gian 10 giờ.</p>
-                    <p>2. Tích chọn checkbox khi hoàn thành công việc để hệ thống tự động tính điểm hiệu suất.</p>
-                    <p>3. Nhấn 'Tổng Kết & Lưu' vào cuối ngày để tổng kết, ghi nhận lịch sử.</p>
-                </div>
-            </div>
+            <!-- Nút gọi Bảng thông tin (Thay thế Tooltip cũ) -->
+            <button onclick="openInfoDrawer()" class="w-7 h-7 bg-slate-200 hover:bg-indigo-500 text-slate-600 hover:text-white rounded-full font-bold text-sm shadow-sm transition-all flex items-center justify-center cursor-pointer focus:outline-none" title="Thông tin & Hướng dẫn">?</button>
+
         </header>
 
         <main class="max-w-7xl mx-auto px-4 py-4 space-y-5">
@@ -346,6 +339,14 @@
         </div>
     </div>
 
+    <!-- ==========================================
+         TOAST NOTIFICATION (Thông báo đồng bộ tự động)
+         ========================================== -->
+    <div id="sync-toast" class="fixed top-6 left-1/2 -translate-x-1/2 transform -translate-y-[150%] opacity-0 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl z-[100] transition-all duration-500 flex items-center gap-2.5 pointer-events-none border border-slate-700">
+        <span class="text-emerald-400 text-lg animate-pulse">☁️</span>
+        <span class="text-sm font-medium tracking-wide" data-vi="Đã đồng bộ dữ liệu mới từ Cloud" data-en="New data synced from Cloud">Đã đồng bộ dữ liệu mới từ Cloud</span>
+    </div>
+
     <!-- AUTH DRAWER -->
     <div id="auth-drawer-overlay" onclick="closeAuthDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
     <div id="auth-drawer" class="fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-[70] transform translate-x-full transition-transform duration-300 flex flex-col">
@@ -390,6 +391,83 @@
                     <span id="cloud-sync-status" class="font-bold" data-vi="Đã đồng bộ" data-en="Synced">Đã đồng bộ</span>                </div>
             </div>
             <button onclick="logoutFromFirebase()" class="w-full mt-auto bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-sm py-2.5 rounded-xl transition-all cursor-pointer" data-vi="Đăng xuất" data-en="Log Out">Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         INFO / GUIDE DRAWER (Bảng trượt Hướng dẫn)
+         ========================================== -->
+    <div id="info-drawer-overlay" onclick="closeInfoDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="info-drawer" class="fixed top-0 left-0 bottom-0 w-full sm:w-[460px] bg-white shadow-2xl z-[70] transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+            <h2 class="text-lg font-black text-slate-800 flex items-center gap-2.5">
+                <!-- SVG Logo TodoToday -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-6 h-6 drop-shadow-sm shrink-0">
+                    <circle cx="50" cy="50" r="50" fill="#6366f1"/>
+                    <circle cx="50" cy="50" r="39" fill="#eeeeff"/>
+                    <circle cx="50" cy="50" r="33" fill="#9333ea"/>
+                    <circle cx="50" cy="50" r="21" fill="#fafa00"/>
+                    <circle cx="50" cy="50" r="14" fill="#dc2626"/>
+                    <path d="M50 4 v92 M4 50 h92" stroke="#0f172a" stroke-width="2"/>
+                    <path d="M48 2 h4 v8 h-4 z" fill="#0f172a"/>
+                </svg>
+                TodoToday
+            </h2>
+            <button onclick="closeInfoDrawer()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex justify-center items-center rounded-full hover:bg-slate-200 transition-colors font-bold cursor-pointer">✕</button>
+        </div>
+
+        <!-- Nội dung One-Pager (Đa ngôn ngữ) -->
+        <div class="p-6 flex-1 overflow-y-auto space-y-6 text-sm text-slate-600 leading-relaxed">
+                    
+            <!-- Executive Summary -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" data-vi="Tóm tắt sản phẩm" data-en="Executive Summary">Tóm tắt sản phẩm</h3>
+                <p data-vi='TodoToday là ứng dụng quản lý thời gian và rèn luyện kỷ luật cá nhân, được thiết kế dựa trên phương pháp "Giới hạn quỹ thời gian" (Timeboxing). Với thiết kế giao diện tinh gọn, tập trung vào hiệu suất, TodoToday giúp người dùng không bị choáng ngợp bởi danh sách công việc dài dằng dặc, mà tập trung hoàn thành trọn vẹn 10 giờ làm việc năng suất mỗi ngày.' data-en='TodoToday is a time management and personal discipline app designed around the "Timeboxing" method. With a minimalist, performance-focused interface, TodoToday prevents users from being overwhelmed by endless to-do lists, focusing instead on completing exactly 10 productive hours each day.'>TodoToday là ứng dụng quản lý thời gian và rèn luyện kỷ luật cá nhân, được thiết kế dựa trên phương pháp "Giới hạn quỹ thời gian" (Timeboxing). Với thiết kế giao diện tinh gọn, tập trung vào hiệu suất, TodoToday giúp người dùng không bị choáng ngợp bởi danh sách công việc dài dằng dặc, mà tập trung hoàn thành trọn vẹn 10 giờ làm việc năng suất mỗi ngày.</p>
+            </div>
+
+            <!-- USP -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" data-vi="Điểm khác biệt cốt lõi" data-en="Key Features">Điểm khác biệt cốt lõi</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">✓</span> 
+                        <span data-vi="Phương pháp 4h-4h-2h: Chia nhỏ ngày làm 3 khoảng thời gian hữu hạn (Sáng 4h, Chiều 4h, Tối 2h)." data-en="4h-4h-2h Rule: Divides the day into 3 finite working sessions (Morning 4h, Afternoon 4h, Evening 2h).">Phương pháp 4h-4h-2h: Chia nhỏ ngày làm 3 khoảng thời gian hữu hạn (Sáng 4h, Chiều 4h, Tối 2h).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">✓</span> 
+                        <span data-vi="Tốc độ chớp nhoáng (Offline-first): Hoạt động mượt mà ngay cả khi không có mạng, không có độ trễ (latency)." data-en="Lightning Fast (Offline-first): Operates smoothly even without an internet connection, with zero latency.">Tốc độ chớp nhoáng (Offline-first): Hoạt động mượt mà ngay cả khi không có mạng, không có độ trễ (latency).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-emerald-500">✓</span> 
+                        <span data-vi='Silent Cloud Sync (Đồng bộ vô hình): Dữ liệu tự động đồng bộ chéo giữa các thiết bị của người dùng. Mọi sự hợp nhất dữ liệu (Merge) diễn ra hoàn toàn ngầm và chỉ thông báo bằng một bong bóng nhỏ (Toast Notification) lướt qua trong 5 giây, mang lại trải nghiệm "Zero-friction" (Không ma sát).' data-en='Silent Cloud Sync: Data automatically syncs across user devices. All data merging happens entirely in the background, notified only by a subtle Toast Notification that dismisses after 5 seconds, delivering a "Zero-friction" experience.'>Silent Cloud Sync (Đồng bộ vô hình): Dữ liệu tự động đồng bộ chéo giữa các thiết bị của người dùng. Mọi sự hợp nhất dữ liệu (Merge) diễn ra hoàn toàn ngầm và chỉ thông báo bằng một bong bóng nhỏ (Toast Notification) lướt qua trong 5 giây, mang lại trải nghiệm "Zero-friction" (Không ma sát).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- User Guide -->
+            <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
+                <h3 class="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-1.5" data-vi="🚀 Hướng dẫn sử dụng nhanh" data-en="🚀 Quick Guide">🚀 Hướng dẫn sử dụng nhanh</h3>
+                <ol class="space-y-3 text-indigo-900/80 list-decimal list-inside marker:font-bold marker:text-indigo-500">
+                    <li>
+                        <span data-vi="Lên kế hoạch: Chọn ngày làm việc hiện tại (hoặc ngày quá khứ, tương lai, chỉ cần chưa có data trong Lịch Sử), điền công việc vào 3 buổi (Sáng, Chiều, Tối). Sử dụng các thẻ gợi ý nhanh (#Plan, #Execute...) để tiết kiệm thời gian." data-en="Planning: Select the current working date (or past/future dates, as long as they don't have data in History), and assign tasks to the 3 sessions (Morning, Afternoon, Evening). Use quick tags (#Plan, #Execute...) to save time.">Lên kế hoạch: Chọn ngày làm việc hiện tại (hoặc ngày quá khứ, tương lai, chỉ cần chưa có data trong Lịch Sử), điền công việc vào 3 buổi (Sáng, Chiều, Tối). Sử dụng các thẻ gợi ý nhanh (#Plan, #Execute...) để tiết kiệm thời gian.</span>
+                        <p class="text-xs text-indigo-700/70 mt-1.5 pl-5 border-l-2 border-indigo-200 ml-1 italic" data-vi="Lưu ý: Chỉ có thể chọn ngày làm việc là ngày CHƯA có data lưu trong Lịch Sử. Nếu ngày đó đã có data, user hãy vào chỉnh sửa trực tiếp trong Lịch Sử hoặc xóa đi để có thể chọn ngày làm việc đó." data-en="Note: You can only select dates that DO NOT have saved data in History. If a date already has data, please edit it directly in History or delete it to make the date available again.">Lưu ý: Chỉ có thể chọn ngày làm việc là ngày CHƯA có data lưu trong Lịch Sử. Nếu ngày đó đã có data, user hãy vào chỉnh sửa trực tiếp trong Lịch Sử hoặc xóa đi để có thể chọn ngày làm việc đó.</p>
+                    </li>
+                    <li>
+                        <span data-vi="Thực thi & Tích lũy điểm: Đánh dấu hoàn thành các công việc. Hệ thống sẽ tự động tính toán tỷ lệ % hiệu suất (Score) theo thời gian thực." data-en="Execution & Scoring: Check off completed tasks. The system will automatically calculate your performance Score (%) in real-time.">Thực thi & Tích lũy điểm: Đánh dấu hoàn thành các công việc. Hệ thống sẽ tự động tính toán tỷ lệ % hiệu suất (Score) theo thời gian thực.</span>
+                        <p class="text-xs text-rose-500/80 mt-1.5 pl-5 border-l-2 border-rose-200 ml-1 italic" data-vi="Lưu ý: Hệ thống hiển thị chữ màu đỏ cho các công việc trong quá khứ, màu xanh cho các công việc trong buổi làm việc hiện tại, và màu đen cho các công việc trong tương lai." data-en="Note: The system displays past tasks in red text, tasks in the current working session in blue, and future tasks in black.">Lưu ý: Hệ thống hiển thị chữ màu đỏ cho các công việc trong quá khứ, màu xanh cho các công việc trong buổi làm việc hiện tại, và màu đen cho các công việc trong tương lai.</p>
+                    </li>
+                    <li>
+                        <span data-vi='Tổng kết (Settle & Save): Cuối ngày, nhấn "Tổng Kết & Lưu" để chốt hiệu suất, khóa ngày hiện tại và ghi nhận vào Lịch sử.' data-en='Settle & Save: At the end of the day, click "Settle & Save" to finalize your performance, lock the current day, and record it into History.'>Tổng kết (Settle & Save): Cuối ngày, nhấn "Tổng Kết & Lưu" để chốt hiệu suất, khóa ngày hiện tại và ghi nhận vào Lịch sử.</span>
+                    </li>
+                    <li>
+                        <span data-vi='Theo dõi biểu đồ: Chuyển sang tab "Lịch sử" để xem biểu đồ phong độ trong 30, 90 hoặc 365 ngày qua để tự đánh giá và tối ưu năng suất.' data-en='Track Progress: Switch to the "History" tab to view your performance chart over the last 30, 90, or 365 days to self-evaluate and optimize productivity.'>Theo dõi biểu đồ: Chuyển sang tab "Lịch sử" để xem biểu đồ phong độ trong 30, 90 hoặc 365 ngày qua để tự đánh giá và tối ưu năng suất.</span>
+                    </li>
+                    <li>
+                        <span data-vi='Điều chỉnh hiệu suất đã lưu: Trong tab “Lịch sử”, có thể click chọn Sửa/Xóa bất kỳ record nào đã lưu.' data-en='Edit Saved Performance: In the "History" tab, you can click to Edit/Delete any saved record.'>Điều chỉnh hiệu suất đã lưu: Trong tab “Lịch sử”, có thể click chọn Sửa/Xóa bất kỳ record nào đã lưu.</span>
+                    </li>
+                </ol>
+            </div>
         </div>
     </div>
 

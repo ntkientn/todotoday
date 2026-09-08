@@ -55,13 +55,20 @@ onAuthStateChanged(auth, async (user) => {
 
     if (user) {
         // UI: Hiện thông tin user
-        const displayName = user.displayName || user.email.split('@')[0];
-        if(authBtnText) authBtnText.innerText = displayName; 
+        const rawDisplayName = user.displayName || user.email.split('@')[0];
+        
+        // Cắt giới hạn 12 ký tự cho nút Button trên thanh Header
+        const shortName = rawDisplayName.length > 12 ? rawDisplayName.substring(0, 12) + '...' : rawDisplayName;
+        if(authBtnText) authBtnText.innerText = shortName; 
+        
+        // Trong bảng Drawer thì vẫn hiển thị tên gốc đầy đủ (rawDisplayName)
         if(document.getElementById('user-display-name')) {
-            document.getElementById('user-display-name').innerText = displayName;
+            document.getElementById('user-display-name').innerText = rawDisplayName;
             document.getElementById('user-email-text').innerText = user.email;
-            document.getElementById('user-avatar-text').innerText = displayName.charAt(0).toUpperCase();
+            document.getElementById('user-avatar-text').innerText = rawDisplayName.charAt(0).toUpperCase();
         }
+
+       
         if(unloggedView && loggedView) {
             unloggedView.classList.add('hidden');
             loggedView.classList.remove('hidden');
@@ -76,13 +83,38 @@ onAuthStateChanged(auth, async (user) => {
             if (docSnap.exists()) {
                 const cloudData = docSnap.data();
                 
-                // Hỏi ý kiến người dùng nếu trên máy cũng đang có data và cloud cũng có data
-                const confirmMerge = confirm(isVi 
-                    ? "☁️ Đã tìm thấy dữ liệu sao lưu của bạn trên Cloud!\n\nNhấn [OK] để GỘP CHUNG dữ liệu đang có trên máy này lên Cloud.\nNhấn [Cancel] để CHỈ DÙNG dữ liệu tải về từ Cloud." 
-                    : "☁️ Cloud backup found!\n\nPress [OK] to MERGE local data into Cloud.\nPress [Cancel] to OVERWRITE local data with Cloud.");
-                
-                if (confirmMerge) {
-                    // Hợp nhất dữ liệu (Smart Merge)
+                // 1. KIỂM TRA THÔNG MINH (Bỏ qua các ngày trống & đồng nhất thứ tự key)
+                const getComparableData = (state) => {
+                    if (!state) return { h: [], d: {} };
+                    const cleanD = {};
+                    if (state.dailyBoards) {
+                        for (const dateKey in state.dailyBoards) {
+                            const b = state.dailyBoards[dateKey];
+                            // Chỉ lấy những ngày CÓ TASK để đem ra so sánh
+                            if (b && (b.morning?.length > 0 || b.afternoon?.length > 0 || b.evening?.length > 0)) {
+                                cleanD[dateKey] = b;
+                            }
+                        }
+                    }
+                    // Hàm đệ quy sắp xếp key alphabet để JSON.stringify so sánh chính xác 100%
+                    const normalize = (obj) => {
+                        if (obj === null || typeof obj !== 'object') return obj;
+                        if (Array.isArray(obj)) return obj.map(normalize);
+                        return Object.keys(obj).sort().reduce((res, key) => {
+                            res[key] = normalize(obj[key]);
+                            return res;
+                        }, {});
+                    };
+                    return JSON.stringify(normalize({ h: state.history || [], d: cleanD }));
+                };
+
+                const localCompare = getComparableData(window.appState);
+                const cloudCompare = getComparableData(cloudData);
+
+                // NẾU CÓ SỰ KHÁC BIỆT THỰC SỰ
+                if (localCompare !== cloudCompare) {
+                    
+                    // 2. TỰ ĐỘNG HỢP NHẤT (Auto-Merge)
                     const historyMap = new Map();
                     if (Array.isArray(window.appState.history)) window.appState.history.forEach(item => { if (item.date) historyMap.set(item.date, item); });
                     if (Array.isArray(cloudData.history)) cloudData.history.forEach(item => { if (item.date) historyMap.set(item.date, item); });
@@ -90,28 +122,41 @@ onAuthStateChanged(auth, async (user) => {
 
                     if (!window.appState.dailyBoards) window.appState.dailyBoards = {};
                     if (cloudData.dailyBoards) {
-                        for (const dateKey in cloudData.dailyBoards) window.appState.dailyBoards[dateKey] = cloudData.dailyBoards[dateKey];
+                        for (const dateKey in cloudData.dailyBoards) {
+                            window.appState.dailyBoards[dateKey] = cloudData.dailyBoards[dateKey];
+                        }
                     }
-                    window.save(); // Lưu đè local và đẩy bản gộp lên Cloud
+                    
+                    // 3. LƯU & RENDER LẠI GIAO DIỆN
+                    window.save(); 
+                    if(window.ensureStructure) window.ensureStructure(window.appState.selectedDate);
+                    const panelToday = document.getElementById('panel-today');
+                    if(panelToday && !panelToday.classList.contains('hidden') && window.renderBoard) {
+                        window.renderBoard();
+                    } else if (window.buildYearFilterOptions) {
+                        window.buildYearFilterOptions();
+                    }
+
+                    // 4. HIỂN THỊ TOAST THÔNG BÁO (Tự tắt sau 5s)
+                    const toast = document.getElementById('sync-toast');
+                    if (toast) {
+                        toast.classList.remove('-translate-y-[150%]', 'opacity-0');
+                        toast.classList.add('translate-y-0', 'opacity-100');
+                        
+                        setTimeout(() => {
+                            toast.classList.remove('translate-y-0', 'opacity-100');
+                            toast.classList.add('-translate-y-[150%]', 'opacity-0');
+                        }, 5000);
+                    }
+                    console.log("Auto-merged new data from Cloud.");
                 } else {
-                    // Ghi đè bằng dữ liệu Cloud hoàn toàn
-                    window.appState = cloudData;
-                    localStorage.setItem('todotoday_chart_v7', JSON.stringify(window.appState));
+                    console.log("Local and Cloud data are identical. No merge needed.");
                 }
+
             } else {
-                // Lần đầu đăng nhập, account trống trơn -> Đẩy dữ liệu hiện tại lên Cloud
+                // Lần đầu tiên đăng nhập, account chưa có data -> Đẩy data máy này lên
                 window.saveToCloud(window.appState);
             }
-
-            // REFRESH UI CỦA APP ĐỂ HIỂN THỊ DATA MỚI
-            if(window.ensureStructure) window.ensureStructure(window.appState.selectedDate);
-            const panelToday = document.getElementById('panel-today');
-            if(panelToday && !panelToday.classList.contains('hidden') && window.renderBoard) {
-                window.renderBoard();
-            } else if (window.buildYearFilterOptions) {
-                window.buildYearFilterOptions();
-            }
-
         } catch (err) {
             console.error("Lỗi kéo dữ liệu từ Cloud:", err);
         }

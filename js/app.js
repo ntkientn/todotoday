@@ -544,7 +544,7 @@ window.updateChartRange = function() {
     const todayStr = window.getLocalTodayString();
     const parts = todayStr.split('-');
     const baseDate = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
-    
+
     const generatedLabels = [], generatedScores = [];
 
     for (let i = daysLimit - 1; i >= 0; i--) {
@@ -671,7 +671,7 @@ window.switchTab = function(name) {
 
 window.toggleLanguage = function() {
     window.appState.currentLang = window.appState.currentLang === "vi" ? "en" : "vi";
-    document.getElementById('lang-btn').innerText = window.appState.currentLang === "vi" ? "English 🌐" : "Tiếng Việt 🌐";
+    document.getElementById('lang-btn').innerText = window.appState.currentLang === "vi" ? "EN" : "VI";
     window.save(); window.updateLanguageUI(); window.setRandomQuote(); window.buildYearFilterOptions();
     if(!document.getElementById('panel-today').classList.contains('hidden')) window.renderBoard();
     else { window.renderHistoryView(); window.updateChartRange(); }
@@ -697,10 +697,22 @@ window.showBackupHint = function() {
         : `💡 DATA MANAGEMENT GUIDE:\n\n1. Data is saved AUTOMATICALLY and PRIVATELY inside your browser (LocalStorage).\n\n2. Export Data: Downloads a .json file to back up your records.\n\n3. Import Data (Smart Merge):\n   - Keeps unique local data records intact.\n   - Adds new records from the file.\n   - Only overwrites on duplicate dates.`);
 }
 
-window.toggleTooltip = function(event) {
-    event.stopPropagation();
-    const tooltip = document.getElementById('hint-tooltip');
-    if (tooltip) tooltip.classList.toggle('hidden');
+// --- UI LOGIC CHO BẢNG INFO DRAWER ---
+window.openInfoDrawer = function() {
+    const overlay = document.getElementById('info-drawer-overlay');
+    const drawer = document.getElementById('info-drawer');
+    overlay.classList.remove('hidden');
+    void overlay.offsetWidth; 
+    overlay.classList.remove('opacity-0');
+    drawer.classList.remove('-translate-x-full');
+}
+
+window.closeInfoDrawer = function() {
+    const overlay = document.getElementById('info-drawer-overlay');
+    const drawer = document.getElementById('info-drawer');
+    overlay.classList.add('opacity-0');
+    drawer.classList.add('-translate-x-full');
+    setTimeout(() => { overlay.classList.add('hidden'); }, 300);
 }
 
 window.handleSettleClick = function() { document.getElementById('settle-modal').classList.remove('hidden'); }
