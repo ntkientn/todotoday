@@ -540,8 +540,11 @@ window.updateChartRange = function() {
 
     if (!window.appState.history || window.appState.history.length === 0) { window.showEmptyEvaluation(isVi); return; }
 
-    const parts = window.appState.selectedDate.split('-');
+    // FIX BUG: Luôn neo biểu đồ vào ngày hôm nay (thực tế) thay vì ngày đang chọn trên bảng
+    const todayStr = window.getLocalTodayString();
+    const parts = todayStr.split('-');
     const baseDate = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+    
     const generatedLabels = [], generatedScores = [];
 
     for (let i = daysLimit - 1; i >= 0; i--) {
