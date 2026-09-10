@@ -33,6 +33,7 @@ window.toggleAuthMode = function() {
 }
 
 const MOTIVATIONAL_QUOTES = [
+    // 8 CÂU HIỆN TẠI
     { text_vi: "Thời gian của bạn là có hạn, đừng lãng phí nó để sống cho cuộc đời của người khác.", text_en: "Your time is limited, so don't waste it living someone else's life.", author: "Steve Jobs" },
     { text_vi: "Kỷ luật là cầu nối giữa mục tiêu và thành tựu.", text_en: "Discipline is the bridge between goals and accomplishment.", author: "Jim Rohn" },
     { text_vi: "Dù bạn nghĩ mình làm được hay không thể, bạn đều đúng.", text_en: "Whether you think you can or think you can’t, you’re right.", author: "Henry Ford" },
@@ -40,7 +41,29 @@ const MOTIVATIONAL_QUOTES = [
     { text_vi: "Tin xấu là thời gian trôi nhanh như bay. Tin tốt là bạn chính là phi công.", text_en: "The bad news is time flies. The good news is you’re the pilot.", author: "Michael Altshuler" },
     { text_vi: "Chúng ta tạo ra nỗi sợ hãi khi chỉ ngồi yên. Chúng ta vượt qua chúng bằng hành động.", text_en: "We generate fears while we sit. We overcome them by action.", author: "Dr. Henry Link" },
     { text_vi: "Bạn sinh ra để chiến thắng, nhưng để trở thành người chiến thắng, bạn phải lên kế hoạch, chuẩn bị, và thực sự kỳ vọng chiến thắng.", text_en: "You were born to win, but to be a winner, you must plan to win, prepare to win, and expect to win.", author: "Zig Ziglar" },
-    { text_vi: "Thành công là tổng của những nỗ lực nhỏ cộng lại, được lặp đi lặp lại mỗi ngày.", text_en: "Success is the sum of small efforts, repeated day in and day out", author: "Robert Collier" }
+    { text_vi: "Thành công là tổng của những nỗ lực nhỏ cộng lại, được lặp đi lặp lại mỗi ngày.", text_en: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+    
+    // 20 CÂU BỔ SUNG MỚI
+    { text_vi: "Bí quyết để tiến lên phía trước là bắt đầu ngay.", text_en: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text_vi: "Đừng đếm những ngày trôi qua, hãy khiến mỗi ngày đều có ý nghĩa.", text_en: "Don't count the days, make the days count.", author: "Muhammad Ali" },
+    { text_vi: "Bạn không cần phải vĩ đại để bắt đầu, nhưng bạn phải bắt đầu để trở nên vĩ đại.", text_en: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+    { text_vi: "Hành động là chìa khóa nền tảng cho mọi thành công.", text_en: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text_vi: "Cách tốt nhất để dự đoán tương lai là tự mình tạo ra nó.", text_en: "The best way to predict your future is to create it.", author: "Abraham Lincoln" },
+    { text_vi: "Hãy làm những gì bạn có thể, với những gì bạn có, ngay tại nơi bạn đứng.", text_en: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
+    { text_vi: "Không quan trọng bạn đi chậm thế nào, miễn là đừng bao giờ dừng lại.", text_en: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+    { text_vi: "Kẻ nghiệp dư ngồi chờ cảm hứng, những người còn lại thức dậy và đi làm.", text_en: "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.", author: "Stephen King" },
+    { text_vi: "'Một ngày nào đó' không phải là một ngày trong tuần.", text_en: "Someday is not a day of the week.", author: "Janet Dailey" },
+    { text_vi: "Tương lai phụ thuộc vào những gì bạn làm ngày hôm nay.", text_en: "The future depends on what you do today.", author: "Mahatma Gandhi" },
+    { text_vi: "Hãy tập trung vào sự năng suất thay vì chỉ cố tỏ ra bận rộn.", text_en: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+    { text_vi: "Động lực là thứ giúp bạn bắt đầu. Thói quen là thứ giữ bạn bước tiếp.", text_en: "Motivation is what gets you started. Habit is what keeps you going.", author: "Jim Ryun" },
+    { text_vi: "Đừng chờ đợi. Sẽ chẳng bao giờ có thời điểm thực sự hoàn hảo đâu.", text_en: "Don’t wait. The time will never be just right.", author: "Napoleon Hill" },
+    { text_vi: "Thất bại trong khâu chuẩn bị chính là chuẩn bị cho sự thất bại.", text_en: "By failing to prepare, you are preparing to fail.", author: "Benjamin Franklin" },
+    { text_vi: "Tám mươi phần trăm của thành công là sự hiện diện và nỗ lực.", text_en: "Eighty percent of success is showing up.", author: "Woody Allen" },
+    { text_vi: "Bạn sẽ bỏ lỡ 100% những cơ hội nếu bạn không bao giờ thử.", text_en: "You miss 100% of the shots you don't take.", author: "Wayne Gretzky" },
+    { text_vi: "Năng lượng và sự kiên trì có thể chinh phục mọi thứ.", text_en: "Energy and persistence conquer all things.", author: "Benjamin Franklin" },
+    { text_vi: "Một năm sau, có thể bạn sẽ ước gì mình đã bắt đầu ngay hôm nay.", text_en: "A year from now you may wish you had started today.", author: "Karen Lamb" },
+    { text_vi: "Sự xuất chúng không phải là một hành động, mà là một thói quen.", text_en: "Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+    { text_vi: "Hãy biến mỗi ngày của bạn thành một kiệt tác.", text_en: "Make each day your masterpiece.", author: "John Wooden" }
 ];
 
 const TIME_LIMITS = { morning: 4, afternoon: 4, evening: 2 };
