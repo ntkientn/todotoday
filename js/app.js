@@ -110,6 +110,8 @@ window.initApp = async function() {
         window.appState.history = [];
     }
 
+    // GỌI HÀM KIỂM TRA NGAY KHI VỪA KHỞI ĐỘNG (FIX BUG)
+    window.validateAndAutoShiftDate();
     window.ensureStructure(window.appState.selectedDate);
 
     try {
@@ -189,6 +191,37 @@ window.save = function() {
 
 window.ensureStructure = function(dateStr) { 
     if (!window.appState.dailyBoards[dateStr]) window.appState.dailyBoards[dateStr] = { morning: [], afternoon: [], evening: [] }; 
+}
+
+// HÀM FIX BUG: Tự động kiểm tra và tịnh tiến ngày làm việc nếu ngày đó đã chốt sổ
+window.validateAndAutoShiftDate = function() {
+    if (!window.appState.history) return;
+    const historyDates = window.appState.history.map(h => h.date);
+    
+    // Nếu ngày đang chọn trên giao diện đã tồn tại trong Lịch sử
+    if (historyDates.includes(window.appState.selectedDate)) {
+        let targetDate = window.getLocalTodayString();
+        
+        // Nếu ngày hôm nay cũng đã bị chốt, tịnh tiến lên ngày tiếp theo
+        while (historyDates.includes(targetDate)) {
+            let nextD = new Date(targetDate + 'T00:00:00');
+            nextD.setDate(nextD.getDate() + 1);
+            targetDate = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, '0')}-${String(nextD.getDate()).padStart(2, '0')}`;
+        }
+        
+        // Gán lại ngày làm việc hợp lệ mới
+        window.appState.selectedDate = targetDate;
+        window.ensureStructure(window.appState.selectedDate);
+        
+        // Ép giao diện cập nhật ngay lập tức
+        try {
+            const datePickerEl = document.getElementById('date-picker');
+            if (datePickerEl) datePickerEl.value = window.appState.selectedDate;
+            const dateDisplayEl = document.getElementById('date-display-text');
+            if (dateDisplayEl) dateDisplayEl.innerText = window.formatToUIDate(window.appState.selectedDate);
+            if (typeof window.toggleGotoTodayButtonVisibility === 'function') window.toggleGotoTodayButtonVisibility();
+        } catch(e) {}
+    }
 }
 
 window.updateDateDisplay = function() {
