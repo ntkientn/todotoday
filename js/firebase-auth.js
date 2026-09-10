@@ -126,6 +126,10 @@ onAuthStateChanged(auth, async (user) => {
                             window.appState.dailyBoards[dateKey] = cloudData.dailyBoards[dateKey];
                         }
                     }
+                    // GỌI HÀM KIỂM TRA ĐỂ SỬA NGÀY LÀM VIỆC NẾU DATA MỚI TỪ CLOUD ĐÃ CHỐT (FIX BUG)
+                    if (typeof window.validateAndAutoShiftDate === 'function') {
+                        window.validateAndAutoShiftDate();
+                    }
                     
                     // 3. LƯU & RENDER LẠI GIAO DIỆN
                     window.save(); 
