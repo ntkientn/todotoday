@@ -632,11 +632,9 @@ window.updateChartRange = function() {
                 labels: generatedLabels.map(l => window.formatToUIDate(l)),
                 datasets: [{
                     label: isVi ? 'Hiệu suất (%)' : 'Score (%)', data: generatedScores, borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.04)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5,
+                    backgroundColor: 'rgba(79, 70, 229, 0.04)', borderWidth: 2, pointRadius: 2, pointHoverRadius: 5,
                     pointBackgroundColor: '#4f46e5', pointHoverBackgroundColor: '#4f46e5', pointHoverBorderColor: '#fff',
-                    pointHoverBorderWidth: 2, spanGaps: true, tension: 0.15, fill: true,
-                    // FIX BUG: Nối liền nét vẽ đi xuyên qua các ngày không có dữ liệu
-                    spanGaps: true
+                    pointHoverBorderWidth: 2, spanGaps: true, tension: 0.15, fill: true
                 }]
             },
             options: {
