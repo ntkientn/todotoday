@@ -585,19 +585,19 @@ window.changeChartRange = function(days, btnElement) {
     window.updateChartRange();
 }
 
-window.updateChartRange = function(range = 30) {
-    // 1. Cập nhật UI trạng thái các nút chọn mốc thời gian
-    document.querySelectorAll('.chart-range-btn').forEach(btn => {
-        btn.classList.remove('bg-white', 'shadow-sm', 'text-slate-800', 'font-bold');
-        btn.classList.add('text-slate-500', 'hover:bg-slate-200/50');
-    });
-    const activeBtn = document.getElementById(`btn-range-${range}`);
-    if (activeBtn) {
-        activeBtn.classList.add('bg-white', 'shadow-sm', 'text-slate-800', 'font-bold');
-        activeBtn.classList.remove('text-slate-500', 'hover:bg-slate-200/50');
-    }
+window.updateChartRange = function() {
+    const daysLimit = currentChartDays;
+    const isVi = window.appState.currentLang === "vi";
+    const titleEl = document.getElementById('chart-title');
+    
+    if(daysLimit === 30) titleEl.innerText = isVi ? "Biểu đồ hiệu suất 30 ngày" : "Performance Chart (30 Days)";
+    else if(daysLimit === 90) titleEl.innerText = isVi ? "Biểu đồ hiệu suất 3 tháng" : "Performance Chart (3 Months)";
+    else if(daysLimit === 180) titleEl.innerText = isVi ? "Biểu đồ hiệu suất 6 tháng" : "Performance Chart (6 Months)";
+    else titleEl.innerText = isVi ? "Biểu đồ hiệu suất 1 năm" : "Performance Chart (1 Year)";
 
-    // 2. Tìm mốc thời gian kết thúc (Ngày xa nhất trong hệ thống)
+    if (!window.appState.history || window.appState.history.length === 0) { window.showEmptyEvaluation(isVi); return; }
+
+    // 1. TÌM MỐC THỜI GIAN KẾT THÚC (Ngày xa nhất trong hệ thống)
     let maxDateStr = window.getLocalTodayString();
     if (window.appState.selectedDate > maxDateStr) maxDateStr = window.appState.selectedDate;
     if (window.appState.history && window.appState.history.length > 0 && window.appState.history[0].date > maxDateStr) {
@@ -609,9 +609,10 @@ window.updateChartRange = function(range = 30) {
 
     const chartLabels = [];
     const chartDataArray = [];
+    const generatedDateKeys = []; // Giữ lại mảng format YYYY-MM-DD để dùng cho bộ Phân tích bên dưới
 
-    // 3. Vòng lặp chuẩn: Từ (range - 1) lùi dần về 0
-    for (let i = range - 1; i >= 0; i--) {
+    // 2. VÒNG LẶP CHUẨN: Chạy chính xác từ (daysLimit - 1) về 0
+    for (let i = daysLimit - 1; i >= 0; i--) {
         const d = new Date(endDate);
         d.setDate(d.getDate() - i);
         
@@ -620,10 +621,11 @@ window.updateChartRange = function(range = 30) {
         const day = String(d.getDate()).padStart(2, '0');
         const dateStr = `${y}-${m}-${day}`;
         
-        chartLabels.push(`${day}/${m}`);
+        chartLabels.push(`${day}/${m}`); // Nhãn hiển thị DD/MM
+        generatedDateKeys.push(dateStr); // Cứu cánh cho bộ lọc Phân tích năng suất
 
         // Dò dữ liệu: Có lịch sử thì lấy điểm, không có thì nạp null
-        const record = (window.appState.history || []).find(h => h.date === dateStr);
+        const record = window.appState.history.find(h => h.date === dateStr);
         if (record) {
             chartDataArray.push(record.score);
         } else {
@@ -631,84 +633,99 @@ window.updateChartRange = function(range = 30) {
         }
     }
 
-    // 4. Vẽ biểu đồ với Chart.js
-    const ctx = document.getElementById('performanceChart');
-    if (!ctx) return;
+    let maxTicks = 6;
+    if (daysLimit === 90) maxTicks = 7; else if (daysLimit === 180) maxTicks = 9; else if (daysLimit === 365) maxTicks = 12;
+
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    Chart.defaults.color = '#64748b'; Chart.defaults.borderColor = '#e2e8f0';
 
     if (window.myChart) {
-        window.myChart.destroy();
+        window.myChart.data.labels = chartLabels;
+        window.myChart.data.datasets[0].data = chartDataArray;
+        window.myChart.data.datasets[0].label = isVi ? 'Hiệu suất (%)' : 'Score (%)';
+        window.myChart.options.scales.x.ticks.maxTicksLimit = maxTicks;
+        window.myChart.update();
+    } else {
+        window.myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: isVi ? 'Hiệu suất (%)' : 'Score (%)', data: chartDataArray, borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.04)', borderWidth: 2, 
+                    pointRadius: 3, // HIỂN THỊ RÕ CHẤM POINT
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#4f46e5', pointHoverBackgroundColor: '#4f46e5', pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2, spanGaps: true, tension: 0.15, fill: true
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: true, mode: 'index', intersect: false, backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 12, weight: 'bold' }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 8, displayColors: false } },
+                interaction: { mode: 'index', intersect: false },
+                scales: { y: { min: 0, max: 110, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, callback: function(value) { if (value > 100) return ''; return value + '%'; } } }, x: { grid: { display: false }, ticks: { maxTicksLimit: maxTicks, font: { size: 10 }, autoSkip: true } } }
+            }
+        });
     }
 
-    const isVi = localStorage.getItem('todo_lang') !== 'en';
+    // ==========================================
+    // KHÔI PHỤC BỘ PHÂN TÍCH NĂNG SUẤT GỐC
+    // ==========================================
+    const evalBox = document.getElementById('evaluation-box');
+    const evalTagRange = document.getElementById('eval-tag-range');
+    if (evalTagRange) evalTagRange.innerText = daysLimit === 30 ? "30D" : (daysLimit === 90 ? "3M" : (daysLimit === 180 ? "6M" : "1Y"));
 
-    window.myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: isVi ? 'Hiệu suất (%)' : 'Score (%)',
-                data: chartDataArray,
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.05)',
-                borderWidth: 2,
-                pointRadius: 3, // Hiển thị rõ chấm point
-                pointHoverRadius: 5,
-                pointBackgroundColor: '#6366f1',
-                pointHoverBackgroundColor: '#6366f1',
-                pointHoverBorderColor: '#fff',
-                pointHoverBorderWidth: 2,
-                spanGaps: true, // Nối liền nét vẽ xuyên qua các ngày null
-                tension: 0.15,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    titleFont: { size: 13, family: "'Inter', sans-serif" },
-                    bodyFont: { size: 13, weight: 'bold', family: "'Inter', sans-serif" },
-                    padding: 10,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        stepSize: 20,
-                        font: { size: 11, family: "'Inter', sans-serif" },
-                        color: '#94a3b8',
-                        callback: function(value) { return value + '%'; }
-                    },
-                    grid: { color: '#f1f5f9', drawBorder: false }
-                },
-                x: {
-                    ticks: {
-                        font: { size: 10, family: "'Inter', sans-serif" },
-                        color: '#94a3b8',
-                        maxTicksLimit: 7
-                    },
-                    grid: { display: false, drawBorder: false }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
-        }
-    });
-};
+    const activeLogs = window.appState.history.filter(h => generatedDateKeys.indexOf(h.date) !== -1);
+    if (activeLogs.length === 0) {
+        window.showEmptyEvaluation(isVi);
+    } else {
+        let sumTotal = 0, sumM = 0, sumC = 0, sumT = 0;
+        activeLogs.forEach(h => {
+            sumTotal += h.score; sumM += h.morningScore !== undefined ? h.morningScore : h.score; sumC += h.afternoonScore !== undefined ? h.afternoonScore : h.score; sumT += h.eveningScore !== undefined ? h.eveningScore : h.score;
+        });
+
+        const totalCount = activeLogs.length;
+        const avgTotal = Math.round(sumTotal / totalCount);
+        const avgM = Math.round(sumM / totalCount);
+        const avgC = Math.round(sumC / totalCount);
+        const avgT = Math.round(sumT / totalCount);
+
+        let bestSession = "Buổi Sáng"; let bestValue = avgM; let bestBg = "bg-amber-500";
+        if (avgC > bestValue) { bestSession = "Buổi Chiều"; bestValue = avgC; bestBg = "bg-sky-500"; }
+        if (avgT > bestValue) { bestSession = "Buổi Tối"; bestValue = avgT; bestBg = "bg-purple-500"; }
+
+        let comment = "";
+        if (avgTotal >= 80) comment = isVi ? "Tuyệt vời! Anh đang làm chủ quỹ 10 tiếng rất tốt." : "Excellent time execution.";
+        else if (avgTotal >= 50) comment = isVi ? "Phong độ khá đều, tối ưu thêm buổi thấp nhất để bứt phá." : "Good consistency.";
+        else comment = isVi ? "Cần tập trung đẩy cao khối lượng hoàn thành." : "Focus needs improvement.";
+
+        evalBox.innerHTML = `
+            <div class="w-full h-full flex flex-col justify-between items-stretch text-left space-y-3.5">
+                <div class="flex justify-between items-baseline border-b border-slate-100 pb-1.5">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${isVi ? 'Tổng Trung bình' : 'Total Average'}</span>
+                    <span class="text-2xl font-black text-indigo-600">${avgTotal}%</span>
+                </div>
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-[#854d0e] mb-1"><span>☀️ Sáng (Quỹ 4h)</span> <span>${avgM}%</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/60"><div class="bg-amber-500 h-full rounded-full" style="width: ${avgM}%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-[#0369a1] mb-1"><span>🌤️ Chiều (Quỹ 4h)</span> <span>${avgC}%</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/60"><div class="bg-sky-500 h-full rounded-full" style="width: ${avgC}%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-[#6b21a8] mb-1"><span>🌙 Tối (Quỹ 2h)</span> <span>${avgT}%</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/60"><div class="bg-purple-500 h-full rounded-full" style="width: ${avgT}%"></div></div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-xs space-y-1">
+                    <p class="text-slate-700 font-semibold">🔥 Năng suất đỉnh nhất: <span class="px-1.5 py-0.5 rounded text-white text-[11px] font-black ${bestBg}">${bestSession} (${bestValue}%)</span></p>
+                    <p class="text-slate-500 italic mt-1 font-medium">"${comment}"</p>
+                </div>
+            </div>`;
+    }
+}
 
 window.showEmptyEvaluation = function(isVi) {
     document.getElementById('evaluation-box').innerHTML = `<div class="py-6 flex flex-col items-center justify-center space-y-2"><p class="text-xs font-bold text-slate-400">${isVi ? 'Chưa có dữ liệu kết toán.' : 'No data.'}</p></div>`;
