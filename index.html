@@ -368,6 +368,35 @@
         <span class="text-sm font-medium tracking-wide" data-vi="Đã đồng bộ dữ liệu mới từ Cloud" data-en="New data synced from Cloud">Đã đồng bộ dữ liệu mới từ Cloud</span>
     </div>
 
+    <!-- ==========================================
+         CUSTOM ALERT/CONFIRM MODAL (Thay thế popup mặc định)
+         ========================================== -->
+    <div id="custom-alert-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeCustomModal(false)"></div>
+        <div class="relative bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform transition-all flex flex-col">
+            <!-- Thay thế cụm chứa Title cũ bằng đoạn này -->
+            <div class="flex items-center gap-2.5 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-6 h-6 drop-shadow-sm shrink-0">
+                    <circle cx="50" cy="50" r="50" fill="#6366f1"/>
+                    <circle cx="50" cy="50" r="39" fill="#eeeeff"/>
+                    <circle cx="50" cy="50" r="33" fill="#9333ea"/>
+                    <circle cx="50" cy="50" r="21" fill="#fafa00"/>
+                    <circle cx="50" cy="50" r="14" fill="#dc2626"/>
+                    <path d="M50 4 v92 M4 50 h92" stroke="#0f172a" stroke-width="2"/>
+                    <path d="M48 2 h4 v8 h-4 z" fill="#0f172a"/>
+                </svg>
+                <h3 id="custom-alert-title" class="text-lg font-bold text-slate-800">TodoToday</h3>
+            </div>
+            <div class="mb-6 flex-1 overflow-y-auto max-h-[60vh] pr-1">
+                <p id="custom-alert-message" class="text-base text-slate-800 leading-relaxed whitespace-pre-wrap font-medium"></p>            
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-auto pt-2">
+                <button id="custom-alert-cancel" onclick="closeCustomModal(false)" class="hidden px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer focus:outline-none">Hủy bỏ</button>
+                <button id="custom-alert-ok" onclick="closeCustomModal(true)" class="px-5 py-2 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer focus:outline-none">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AUTH DRAWER -->
     <div id="auth-drawer-overlay" onclick="closeAuthDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
     <div id="auth-drawer" class="fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-[70] transform translate-x-full transition-transform duration-300 flex flex-col">
