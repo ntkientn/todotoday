@@ -177,30 +177,30 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 window.loginWithGoogle = async function() {
-    const provider = new GoogleAuthProvider();
-    try { await signInWithPopup(auth, provider); } 
-    catch (error) { alert("Lỗi đăng nhập Google: " + error.message); }
+    const provider = new window.GoogleAuthProvider();
+    try { await window.signInWithPopup(auth, provider); } 
+    catch (error) { await window.customAlert("Lỗi đăng nhập Google: " + error.message); }
 }
 
 window.handleEmailAuth = async function() {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value.trim();
     const isVi = window.appState.currentLang === "vi";
-    if (!email || !password) return alert(isVi ? "Vui lòng nhập đủ thông tin!" : "Enter all fields!");
+    if (!email || !password) return await window.customAlert(isVi ? "Vui lòng nhập đủ thông tin!" : "Enter all fields!");
 
     try {
         if (window.isSignUpMode) {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert(isVi ? "🎉 Đăng ký thành công!" : "🎉 Sign up successful!");
+            await window.createUserWithEmailAndPassword(auth, email, password);
+            await window.customAlert(isVi ? "🎉 Đăng ký thành công!" : "🎉 Sign up successful!");
         } else {
-            await signInWithEmailAndPassword(auth, email, password);
+            await window.signInWithEmailAndPassword(auth, email, password);
         }
-    } catch (error) { alert(error.message); }
+    } catch (error) { await window.customAlert(error.message); }
 }
 
 window.logoutFromFirebase = async function() {
     try {
-        await signOut(auth);
-        alert(window.appState.currentLang === "vi" ? "Đã đăng xuất an toàn." : "Logged out successfully.");
+        await window.signOut(auth);
+        await window.customAlert(window.appState.currentLang === "vi" ? "Đã đăng xuất an toàn." : "Logged out successfully.");
     } catch (error) { console.error("Logout Error:", error); }
 }
