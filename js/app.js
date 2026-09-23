@@ -71,6 +71,43 @@ window.appState = { currentLang: "vi", selectedDate: "", dailyBoards: {}, histor
 let myChart = null;
 let currentChartDays = 30;
 
+// --- CUSTOM MODAL ENGINE to replace Settle Pop-up ---
+window.customModalCallback = null;
+
+window.customAlert = function(message, title = " TodoToday") {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-alert-modal');
+        document.getElementById('custom-alert-title').innerText = title;
+        document.getElementById('custom-alert-message').innerText = message;
+        document.getElementById('custom-alert-cancel').classList.add('hidden');
+        document.getElementById('custom-alert-ok').innerText = window.appState.currentLang === 'vi' ? 'Đóng' : 'Close';
+        
+        modal.classList.remove('hidden');
+        window.customModalCallback = (result) => { modal.classList.add('hidden'); resolve(result); };
+    });
+}
+
+window.customConfirm = function(message, title = "🎯 TodoToday") {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-alert-modal');
+        const isVi = window.appState.currentLang === 'vi';
+        document.getElementById('custom-alert-title').innerText = title;
+        document.getElementById('custom-alert-message').innerText = message;
+        
+        const cancelBtn = document.getElementById('custom-alert-cancel');
+        cancelBtn.classList.remove('hidden');
+        cancelBtn.innerText = isVi ? 'Hủy' : 'Cancel';
+        document.getElementById('custom-alert-ok').innerText = isVi ? 'Xác nhận' : 'Confirm';
+        
+        modal.classList.remove('hidden');
+        window.customModalCallback = (result) => { modal.classList.add('hidden'); resolve(result); };
+    });
+}
+
+window.closeCustomModal = function(result) {
+    if (window.customModalCallback) window.customModalCallback(result);
+}
+
 window.openExerciseModal = function(imageSrc) {
     const modal = document.getElementById('exercise-modal');
     const img = document.getElementById('exercise-image');
@@ -152,12 +189,14 @@ window.initApp = async function() {
     window.renderBoard(); 
 }
 
-window.exportBackupData = function() {
+window.exportBackupData = async function() {
     const isVi = window.appState.currentLang === "vi";
     if (!window.appState.history || window.appState.history.length === 0) {
-        return alert(isVi ? "Chưa có dữ liệu lịch sử nào để xuất!" : "No history data to export!");
+        return await window.customAlert(isVi ? "Chưa có dữ liệu lịch sử nào để xuất!" : "No history data to export!");
     }
-    if (!confirm(isVi ? "Bạn có muốn xuất và tải về file sao lưu dữ liệu (.json) hiện tại không?" : "Do you want to export and download the current backup file (.json)?")) return;
+    const isConfirm = await window.customConfirm(isVi ? "Bạn có muốn xuất và tải về file sao lưu dữ liệu (.json) hiện tại không?" : "Do you want to export and download the current backup file (.json)?");
+    if (!isConfirm) return;
+    
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appState, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
@@ -165,11 +204,10 @@ window.exportBackupData = function() {
     document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
 }
 
-window.triggerImportClick = function() {
+window.triggerImportClick = async function() {
     const isVi = window.appState.currentLang === "vi";
-    if (confirm(isVi ? "⚠️ Anh có muốn nhập dữ liệu sao lưu không?\nHệ thống sẽ GIỮ NGUYÊN các ngày cũ độc lập, nạp thêm ngày mới và chỉ GHI ĐÈ nếu trùng ngày." : "⚠️ Do you want to import backup data?")) {
-        document.getElementById('hidden-file-input').click();
-    }
+    const isConfirm = await window.customConfirm(isVi ? "Xác nhận: Bạn có muốn nhập thêm dữ liệu từ file không?\n ⚠️ Hệ thống sẽ GIỮ NGUYÊN dữ liệu hiện có trong Lịch Sử, chỉ nạp thêm dữ liệu ngày mới chưa được ghi nhận. \n⚠️ Nếu trùng với ngày đã có trong Lịch Sử, dữ liệu mới sẽ GHI ĐÈ thay thế dữ liệu cũ." : "Do you want to import backup data?\n ⚠️ The system will RETAIN existing data in the History and only add data for new, previously unrecorded days. \n⚠️ If a date already exists in the History, the new data will OVERWRITE the old data.");
+    if (isConfirm) { document.getElementById('hidden-file-input').click(); }
 }
 
 window.importBackupData = function(event) {
@@ -177,7 +215,7 @@ window.importBackupData = function(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) { // Đã chuyển thành async
         try {
             const importedState = JSON.parse(e.target.result);
             if (importedState && (importedState.history || importedState.dailyBoards)) {
@@ -192,12 +230,12 @@ window.importBackupData = function(event) {
                 }
                 window.appState.currentLang = importedState.currentLang || window.appState.currentLang;
                 window.save();
-                alert(isVi ? "🎉 Đã hợp nhất dữ liệu sao lưu thành công!" : "🎉 Data merged and imported successfully!");
+                await window.customAlert(isVi ? "🎉 Đã hợp nhất dữ liệu sao lưu thành công!" : "🎉 Data merged and imported successfully!");
                 window.location.reload();
             } else {
-                alert(isVi ? "❌ File JSON không đúng cấu trúc!" : "❌ Invalid structure!"); event.target.value = '';
+                await window.customAlert(isVi ? "❌ File JSON không đúng cấu trúc!" : "❌ Invalid structure!"); event.target.value = '';
             }
-        } catch (err) { alert(isVi ? "❌ Lỗi đọc file!" : "❌ Error parsing file!"); event.target.value = ''; }
+        } catch (err) { await window.customAlert(isVi ? "❌ Lỗi đọc file!" : "❌ Error parsing file!"); event.target.value = ''; }
     };
     reader.readAsText(file);
 }
@@ -247,11 +285,11 @@ window.validateAndAutoShiftDate = function() {
     }
 }
 
-window.updateDateDisplay = function() {
+window.updateDateDisplay = async function() {
     const pickerVal = document.getElementById('date-picker').value;
     if (!pickerVal) return;
     if (window.appState.history.some(h => h.date === pickerVal)) {
-        alert("Ngày được chọn đã có dữ liệu trong Lịch sử. Bạn có thể vào tab Lịch sử để chỉnh sửa.");
+        await window.customAlert(window.appState.currentLang === 'vi' ? "Ngày được chọn đã có dữ liệu trong Lịch sử. Bạn có thể vào tab Lịch sử để chỉnh sửa." : "Date already has data in History.");
         document.getElementById('date-picker').value = window.appState.selectedDate; return;
     }
     window.appState.selectedDate = pickerVal;
@@ -276,12 +314,12 @@ window.getSessionTimeCalculations = function(session) {
     return { total, done };
 }
 
-window.addTask = function(session) {
+window.addTask = async function(session) {
     const title = document.getElementById(`input-${session}-title`).value.trim();
     const desc = document.getElementById(`input-${session}-desc`).value.trim();
     const hours = parseFloat(document.getElementById(`input-${session}-hours`).value || 0);
 
-    if (!title) return alert(window.appState.currentLang === 'vi' ? "Vui lòng nhập tiêu đề!" : "Title is required!");
+    if (!title) return await window.customAlert(window.appState.currentLang === 'vi' ? "Vui lòng nhập tiêu đề!" : "Title is required!");
     window.appState.dailyBoards[window.appState.selectedDate][session].push({ id: 't_' + Date.now(), title, desc, hours, completed: false });
     document.getElementById(`input-${session}-title`).value = ""; document.getElementById(`input-${session}-desc`).value = "";
     window.save(); window.renderBoard();
@@ -411,7 +449,7 @@ window.renderBoard = function() {
     else statusText.innerText = isVi ? "💪 Hành động ngay để kiểm soát mục tiêu và chứng minh bản lĩnh kỷ luật của bạn!" : "💪 Take action right now to control your goals!";
 }
 
-window.confirmSettleAndSave = function() {
+window.confirmSettleAndSave = async function() {
     window.closeSettleModal();
     const isVi = window.appState.currentLang === "vi";
     const scoreEl = document.getElementById('score-display');
@@ -455,7 +493,7 @@ window.confirmSettleAndSave = function() {
         if (typeof window.toggleGotoTodayButtonVisibility === 'function') window.toggleGotoTodayButtonVisibility();
         window.renderBoard();
     } catch(e) {}
-    alert(isVi ? "Hệ thống đã kết toán thành công!" : "Settlement successful!");
+    await window.customAlert(isVi ? "Hệ thống đã kết toán thành công!" : "Settlement successful!");
 }
 
 window.buildYearFilterOptions = function() {
@@ -556,7 +594,7 @@ window.calculateModalLiveScore = function() {
     document.getElementById('modal-live-total-score').innerText = `${liveTotal}%`;
 }
 
-window.saveEditModalData = function() {
+window.saveEditModalData = async function() {
     const isVi = window.appState.currentLang === "vi";
     const dateStr = document.getElementById('modal-target-date').value;
     const targetLog = window.appState.history.find(h => h.date === dateStr);
@@ -567,13 +605,14 @@ window.saveEditModalData = function() {
     const nE = parseInt(document.getElementById('modal-input-evening').value);
 
     if (isNaN(nM) || nM < 0 || nM > 100 || isNaN(nA) || nA < 0 || nA > 100 || isNaN(nE) || nE < 0 || nE > 100) {
-        return alert(isVi ? "❌ Số liệu nhập vào không hợp lệ (Phải từ 0 đến 100)!" : "❌ Invalid values!");
+        return await window.customAlert(isVi ? "❌ Số liệu nhập vào không hợp lệ (Phải từ 0 đến 100)!" : "❌ Invalid values!");
     }
 
     targetLog.morningScore = nM; targetLog.afternoonScore = nA; targetLog.eveningScore = nE;
     targetLog.score = Math.round((nM * 4 + nA * 4 + nE * 2) / 10);
 
-    window.save(); window.closeEditModal(); window.renderHistoryView(); window.updateChartRange();
+    window.save(); window.closeEditModal(); window.renderHistoryView(); 
+    if(typeof window.updateChartRange === 'function') window.updateChartRange();
 }
 
 window.changeChartRange = function(days, btnElement) {
@@ -771,11 +810,12 @@ window.setRandomQuote = function() {
     document.getElementById('quote-author').innerText = `— ${quote.author}`;
 }
 
-window.showBackupHint = function() {
+window.showBackupHint = async function() {
     const isVi = window.appState.currentLang === "vi";
-    alert(isVi 
+    await window.customAlert(isVi 
         ? `💡 HƯỚNG DẪN QUẢN LÝ DỮ LIỆU:\n\n1. Ứng dụng này lưu dữ liệu TỰ ĐỘNG và RIÊNG BIỆT trên trình duyệt của máy này (LocalStorage).\n\n2. Xuất Data: Tải về file .json lưu trên máy tính để làm bản sao lưu dự phòng (Backup).\n\n3. Nhập Data (Smart Merge): Khi anh đổi thiết bị hoặc muốn nạp lại dữ liệu cũ, hệ thống sẽ tự gộp dữ liệu lại:\n   - Giữ nguyên các ngày cũ độc lập trên máy hiện tại.\n   - Nạp thêm các ngày mới có trong file.\n   - Chỉ ghi đè (cập nhật mới) nếu trùng ngày.`
-        : `💡 DATA MANAGEMENT GUIDE:\n\n1. Data is saved AUTOMATICALLY and PRIVATELY inside your browser (LocalStorage).\n\n2. Export Data: Downloads a .json file to back up your records.\n\n3. Import Data (Smart Merge):\n   - Keeps unique local data records intact.\n   - Adds new records from the file.\n   - Only overwrites on duplicate dates.`);
+        : `💡 DATA MANAGEMENT GUIDE:\n\n1. Data is saved AUTOMATICALLY and PRIVATELY inside your browser (LocalStorage).\n\n2. Export Data: Downloads a .json file to back up your records.\n\n3. Import Data (Smart Merge):\n   - Keeps unique local data records intact.\n   - Adds new records from the file.\n   - Only overwrites on duplicate dates.`, 
+        isVi ? "Thông tin hệ thống" : "System Info");
 }
 
 // --- UI LOGIC CHO BẢNG INFO DRAWER ---
