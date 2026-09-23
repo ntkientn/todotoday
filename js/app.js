@@ -87,7 +87,7 @@ window.customAlert = function(message, title = " TodoToday") {
     });
 }
 
-window.customConfirm = function(message, title = "🎯 TodoToday") {
+window.customConfirm = function(message, title = "TodoToday") {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-alert-modal');
         const isVi = window.appState.currentLang === 'vi';
