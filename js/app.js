@@ -456,21 +456,43 @@ window.confirmSettleAndSave = async function() {
     const totalScore = scoreEl ? parseInt(scoreEl.innerText) : 0;
     const currentDate = window.appState.selectedDate;
     const board = window.appState.dailyBoards[currentDate];
-    let mDone = 0, cDone = 0, tDone = 0;
-    
+
+    // FIX BUG: Tính % điểm chuẩn xác cho từng buổi dựa trên số giờ hoàn thành
+    let morningScore = 0, afternoonScore = 0, eveningScore = 0;
+
     if (board) {
-        if (board.morning) mDone = board.morning.filter(t => t.completed).length;
-        if (board.afternoon) cDone = board.afternoon.filter(t => t.completed).length;
-        if (board.evening) tDone = board.evening.filter(t => t.completed).length;
+        const getSessionScore = (session, limit) => {
+            if (!board[session]) return 0;
+            let doneHours = 0;
+            board[session].forEach(t => { if (t.completed) doneHours += t.hours; });
+            return Math.round((doneHours / limit) * 100);
+        };
+
+        // Tính % hiệu suất theo chuẩn quỹ 4h - 4h - 2h
+        morningScore = getSessionScore('morning', 4);
+        afternoonScore = getSessionScore('afternoon', 4);
+        eveningScore = getSessionScore('evening', 2);
     }
 
     if (!window.appState.history) window.appState.history = [];
     const existingIndex = window.appState.history.findIndex(h => h.date === currentDate);
-    const historyRecord = { date: currentDate, score: totalScore, mDone: mDone, cDone: cDone, tDone: tDone, settledAt: new Date().toISOString() };
+    
+    // Lưu trữ chính xác điểm từng buổi vào Lịch sử
+    const historyRecord = { 
+        date: currentDate, 
+        score: totalScore, 
+        morningScore: morningScore, 
+        afternoonScore: afternoonScore, 
+        eveningScore: eveningScore, 
+        settledAt: new Date().toISOString() 
+    };
+
     if (existingIndex >= 0) window.appState.history[existingIndex] = historyRecord; else window.appState.history.push(historyRecord);
 
+    // Xóa data bảng trong ngày sau khi đã chốt
     if (window.appState.dailyBoards[currentDate]) delete window.appState.dailyBoards[currentDate];
 
+    // Tịnh tiến ngày làm việc
     let targetDate = window.getLocalTodayString();
     while (true) {
         const dayData = window.appState.dailyBoards[targetDate];
@@ -485,6 +507,7 @@ window.confirmSettleAndSave = async function() {
     window.ensureStructure(window.appState.selectedDate);
     window.save();
 
+    // Làm mới giao diện
     try {
         const datePickerEl = document.getElementById('date-picker');
         if (datePickerEl) datePickerEl.value = window.appState.selectedDate;
@@ -493,6 +516,7 @@ window.confirmSettleAndSave = async function() {
         if (typeof window.toggleGotoTodayButtonVisibility === 'function') window.toggleGotoTodayButtonVisibility();
         window.renderBoard();
     } catch(e) {}
+    
     await window.customAlert(isVi ? "Hệ thống đã kết toán thành công!" : "Settlement successful!");
 }
 
