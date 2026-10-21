@@ -795,30 +795,62 @@ window.showEmptyEvaluation = function(isVi) {
 }
 
 window.switchTab = function(name) {
-    const btnToday = document.getElementById('tab-today');
-    const btnHistory = document.getElementById('tab-history');
+    // Nút trên Desktop
+    const btnTodayD = document.getElementById('tab-today');
+    const btnHistoryD = document.getElementById('tab-history');
+    // Nút trên Mobile
+    const btnTodayM = document.getElementById('tab-today-mobile');
+    const btnHistoryM = document.getElementById('tab-history-mobile');
+    
     const panelToday = document.getElementById('panel-today');
     const panelHistory = document.getElementById('panel-history');
 
     if (name === 'today') {
-        btnToday.className = "flex-1 sm:flex-none py-3 px-6 text-base font-bold text-indigo-600 border-b-2 border-indigo-600 transition-all cursor-pointer text-center";
-        btnHistory.className = "flex-1 sm:flex-none py-3 px-6 text-base font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-all cursor-pointer text-center";
+        // Style Desktop
+        if(btnTodayD) btnTodayD.className = "flex-1 sm:flex-none py-3 px-6 text-base font-bold text-indigo-600 border-b-2 border-indigo-600 transition-all cursor-pointer text-center";
+        if(btnHistoryD) btnHistoryD.className = "flex-1 sm:flex-none py-3 px-6 text-base font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-all cursor-pointer text-center";
+        // Style Mobile
+        if(btnTodayM) btnTodayM.className = "flex-1 flex flex-col items-center justify-center gap-1 text-indigo-600 transition-colors py-1 cursor-pointer";
+        if(btnHistoryM) btnHistoryM.className = "flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-colors py-1 cursor-pointer";
+
         panelToday.classList.remove('hidden'); panelHistory.classList.add('hidden');
         window.renderBoard();
     } else {
-        btnHistory.className = "flex-1 sm:flex-none py-3 px-6 text-base font-bold text-indigo-600 border-b-2 border-indigo-600 transition-all cursor-pointer text-center";
-        btnToday.className = "flex-1 sm:flex-none py-3 px-6 text-base font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-all cursor-pointer text-center";
+        // Style Desktop
+        if(btnHistoryD) btnHistoryD.className = "flex-1 sm:flex-none py-3 px-6 text-base font-bold text-indigo-600 border-b-2 border-indigo-600 transition-all cursor-pointer text-center";
+        if(btnTodayD) btnTodayD.className = "flex-1 sm:flex-none py-3 px-6 text-base font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-all cursor-pointer text-center";
+        // Style Mobile
+        if(btnHistoryM) btnHistoryM.className = "flex-1 flex flex-col items-center justify-center gap-1 text-indigo-600 transition-colors py-1 cursor-pointer";
+        if(btnTodayM) btnTodayM.className = "flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-colors py-1 cursor-pointer";
+
         panelHistory.classList.remove('hidden'); panelToday.classList.add('hidden');
         window.buildYearFilterOptions(); window.renderHistoryView(); setTimeout(window.updateChartRange, 40); 
     }
-}
 
-window.toggleLanguage = function() {
-    window.appState.currentLang = window.appState.currentLang === "vi" ? "en" : "vi";
-    document.getElementById('lang-btn').innerText = window.appState.currentLang === "vi" ? "EN" : "VI";
-    window.save(); window.updateLanguageUI(); window.setRandomQuote(); window.buildYearFilterOptions();
-    if(!document.getElementById('panel-today').classList.contains('hidden')) window.renderBoard();
-    else { window.renderHistoryView(); window.updateChartRange(); }
+    // UX FIX: Tự động trượt mượt mà lên phần đầu nội dung (Chọn ngày/Biểu đồ)
+    // UX FIX: Cuộn mượt mà đến đúng vị trí trọng tâm (Ô chọn ngày / Biểu đồ)
+    setTimeout(() => {
+        // Tìm element mục tiêu dựa trên tab đang mở
+        const targetElement = name === 'today' 
+            ? document.getElementById('date-picker').closest('.bg-white') // Bọc ngoài của ô chọn ngày
+            : document.getElementById('chart-title'); // Tiêu đề biểu đồ của tab Lịch sử
+
+        if (targetElement) {
+            // Tính toán vị trí của element so với đỉnh trang
+            const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
+            
+            // Trừ đi 100px làm khoảng đệm (offset) để không bị Sticky Header che mất
+            const offsetPosition = elementPosition - 30;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        } else {
+            // Backup: Nếu không tìm thấy element, cuộn lên top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, 50); // Timeout nhẹ để DOM kịp render hiển thị tab mới trước khi tính tọa độ
 }
 
 window.updateLanguageUI = function() {
