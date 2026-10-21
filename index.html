@@ -12,7 +12,7 @@
 </head>
 <body class="overflow-x-hidden w-full bg-slate-100 bg-[#f8fafc] text-slate-800 min-h-screen antialiased flex flex-col justify-between text-base">
 
-    <div class="w-full flex bg-white border-b border-slate-200/80 px-4 py-2.5 gap-2 flex justify-between items-center shadow-sm">
+    <div class="w-full flex border-b border-slate-200/80 px-4 py-2.5 gap-2 flex justify-between items-center">
         <a href="https://ntkientn.github.io/webnet/" class="px-2 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all flex items-center gap-1">
             <span class="text-slate-300"></span> Back to WebNet
         </a>
@@ -49,28 +49,30 @@
 
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 py-4 space-y-5">
+        <main class="max-w-7xl mx-auto px-4 py-4 space-y-5 pb-24 md:pb-18">
             <!-- FIX UI: Neo Tab và Quote on top kèm hiệu ứng kính mờ -->
-            <div class="sticky top-0 z-40 bg-[#f8fafc]/95 backdrop-blur-md pt-4 pb-2 -mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <!-- CỤM TABS VÀ QUOTE (Đã tối ưu: Chỉ Sticky trên Desktop, Cuộn tự nhiên trên Mobile) -->
+            <div class="md:sticky md:top-0 md:z-40 md:bg-slate-100/80 md:backdrop-blur-md pt-4 pb-4 -mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 
-                <div class="flex border-b border-slate-200 bg-white rounded-t-2xl px-2 shadow-sm">
+                <!-- CỤM TABS TRÊN (Chỉ hiện trên Desktop, ẩn trên Mobile vì đã có Bottom Nav) -->
+                <div class="hidden md:flex border-b border-slate-200 bg-white rounded-t-2xl px-2 shadow-sm">
                     <button id="tab-today" onclick="switchTab('today')" class="flex-1 sm:flex-none py-3 px-6 text-base font-bold text-indigo-600 border-b-2 border-indigo-600 transition-all cursor-pointer text-center">Bảng Công Việc</button>
                     <button id="tab-history" onclick="switchTab('history')" class="flex-1 sm:flex-none py-3 px-6 text-base font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-all cursor-pointer text-center">Lịch sử</button>
                 </div>
                 
+                <!-- CỤM QUOTE -->
                 <div class="md:col-span-2 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 flex items-start sm:items-center gap-3 shadow-sm border-l-4 border-l-indigo-500 group">
                     <div class="items-center justify-center text-amber-500 shrink-0 text-2xl mt-0.5 sm:mt-0">✨</div>
                     <div class="min-w-0 flex-1">
-                        <p id="quote-text" class="text-sm font-bold text-slate-600 italic leading-relaxed transition-all">"Đừng ước mọi chuyện dễ dàng hơn, hãy ước mình giỏi giang hơn."</p>
+                        <p id="quote-text" class="text-sm font-bold text-slate-800 leading-relaxed transition-all">"Đừng ước mọi chuyện dễ dàng hơn, hãy ước mình giỏi giang hơn."</p>
                         <div class="flex items-center justify-between mt-1.5 sm:mt-0.5">
                             <p id="quote-author" class="text-xs font-bold text-slate-400">— Jim Rohn</p>
-                            <button onclick="setRandomQuote()" class="text-[12px] font-semibold text-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-1 active:scale-95" title="Đổi câu khác">
+                            <button onclick="setRandomQuote()" class="text-[12px] font-semibold text-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-1 active:scale-95">
                                 <span data-vi="Xem thêm" data-en="More">Xem thêm</span> <span>⭯</span>
                             </button>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -209,6 +211,23 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="max-w-7xl mx-auto px-4 w-full">
+                    <div class="mt-8 mb-12 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200/60 w-full">
+                        <div class="flex items-center gap-3 mb-4"><h3 class="font-bold text-slate-600 text-base md:text-base">❗ Hãy vận động sau 1-2 giờ làm việc để nạp lại năng lượng và giữ sức khỏe tốt.</h3></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-2xl">
+                            <button onclick="openExerciseModal('img/todotoday_8baitap.jpg')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left group">
+                                <span class="text-indigo-500 group-hover:scale-110 transition-transform">👨‍🏫</span><span class="text-base font-medium text-slate-600 group-hover:text-indigo-700">8 bài tập tại bàn làm việc</span>
+                            </button>
+                            <button onclick="openExerciseModal('img/todotoday_baitapcovaigay.jpg')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left group">
+                                <span class="text-indigo-500 group-hover:scale-110 transition-transform">🙆‍♂️</span><span class="text-base font-medium text-slate-600 group-hover:text-indigo-700">Bài tập Cổ Vai Gáy</span>
+                            </button>
+                            <button onclick="openExerciseModal('img/todotoday_vandongkhilamviec.jpg')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left group">
+                                <span class="text-indigo-500 group-hover:scale-110 transition-transform">👨‍💼</span><span class="text-base font-medium text-slate-600 group-hover:text-indigo-700">Bài vận động cho NVVP</span>
+                            </button>  
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="panel-history" class="hidden space-y-4">
@@ -332,23 +351,6 @@
             <div class="flex items-center justify-end gap-3">
                 <button onclick="closeSettleModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer">Hủy bỏ</button>
                 <button onclick="confirmSettleAndSave()" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/10 transition-colors cursor-pointer">Xác nhận & Lưu</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-4 w-full">
-        <div class="mt-8 mb-12 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200/60 w-full">
-            <div class="flex items-center gap-3 mb-4"><h3 class="font-bold text-slate-600 text-base md:text-base">❗ Hãy vận động sau 1-2 giờ làm việc để nạp lại năng lượng và giữ sức khỏe tốt.</h3></div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-2xl">
-                <button onclick="openExerciseModal('img/todotoday_8baitap.jpg')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left group">
-                    <span class="text-indigo-500 group-hover:scale-110 transition-transform">👨‍🏫</span><span class="text-base font-medium text-slate-600 group-hover:text-indigo-700">8 bài tập tại bàn làm việc</span>
-                </button>
-                <button onclick="openExerciseModal('img/todotoday_baitapcovaigay.jpg')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left group">
-                    <span class="text-indigo-500 group-hover:scale-110 transition-transform">🙆‍♂️</span><span class="text-base font-medium text-slate-600 group-hover:text-indigo-700">Bài tập Cổ Vai Gáy</span>
-                </button>
-                <button onclick="openExerciseModal('img/todotoday_vandongkhilamviec.jpg')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all text-left group">
-                    <span class="text-indigo-500 group-hover:scale-110 transition-transform">👨‍💼</span><span class="text-base font-medium text-slate-600 group-hover:text-indigo-700">Bài vận động cho NVVP</span>
-                </button>  
             </div>
         </div>
     </div>
@@ -525,7 +527,36 @@
         </div>
     </div>
 
-    <footer class="w-full text-center py-4 border-t border-slate-200 bg-white text-xs font-medium text-slate-400 mt-8">
+    <!-- BOTTOM NAVIGATION (MOBILE ONLY) -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-[90] h-[56px] flex justify-between items-center shadow-[0_-4px_10px_-5px_rgba(0,0,0,0.1)] px-2">
+        
+        <!-- Tab: Bảng Công Việc -->
+        <button id="tab-today-mobile" onclick="switchTab('today')" class="flex-1 flex flex-col items-center justify-center gap-1 text-indigo-600 transition-colors cursor-pointer h-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <span class="text-[10px] font-bold" data-vi="Công Việc" data-en="Tasks">Công Việc</span>
+        </button>
+
+        <!-- Nút: Tổng Kết & Lưu (Size to 14x14, nhô cao) -->
+        <div class="flex-shrink-0 -mt-7 relative z-10 px-2">
+            <button onclick="handleSettleClick()" class="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center shadow-md shadow-indigo-500/40 border-4 border-slate-100 active:scale-95 transition-transform cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tab: Lịch Sử -->
+        <button id="tab-history-mobile" onclick="switchTab('history')" class="flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer h-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span class="text-[10px] font-bold" data-vi="Lịch Sử" data-en="History">Lịch Sử</span>
+        </button>
+    </div>
+
+    <footer class="mt-8 text-center text-sm text-slate-500 pb-24 md:pb-4">
         <p>© 2026 Nguyen Trung Kien • All rights reserved.</p>
     </footer>
 
