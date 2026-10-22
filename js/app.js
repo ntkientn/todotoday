@@ -82,6 +82,7 @@ window.customAlert = function(message, title = " TodoToday") {
         document.getElementById('custom-alert-cancel').classList.add('hidden');
         document.getElementById('custom-alert-ok').innerText = window.appState.currentLang === 'vi' ? 'Đóng' : 'Close';
         
+        document.body.style.overflow = 'hidden'; // KHÓA SCROLL
         modal.classList.remove('hidden');
         window.customModalCallback = (result) => { modal.classList.add('hidden'); resolve(result); };
     });
@@ -99,12 +100,14 @@ window.customConfirm = function(message, title = "TodoToday") {
         cancelBtn.innerText = isVi ? 'Hủy' : 'Cancel';
         document.getElementById('custom-alert-ok').innerText = isVi ? 'Xác nhận' : 'Confirm';
         
+        document.body.style.overflow = 'hidden'; // KHÓA SCROLL
         modal.classList.remove('hidden');
         window.customModalCallback = (result) => { modal.classList.add('hidden'); resolve(result); };
     });
 }
 
 window.closeCustomModal = function(result) {
+    document.body.style.overflow = 'auto'; // MỞ KHÓA SCROLL
     if (window.customModalCallback) window.customModalCallback(result);
 }
 
@@ -600,10 +603,14 @@ window.openEditModal = function(dateStr) {
     document.getElementById('modal-input-evening').value = targetLog.eveningScore !== undefined ? targetLog.eveningScore : targetLog.score;
     
     window.calculateModalLiveScore();
+    document.body.style.overflow = 'hidden'; // KHÓA SCROLL
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
-window.closeEditModal = function() { document.getElementById('edit-modal').classList.add('hidden'); }
+window.closeEditModal = function() { 
+    document.body.style.overflow = 'auto'; // MỞ KHÓA SCROLL
+    document.getElementById('edit-modal').classList.add('hidden'); 
+}
 
 window.calculateModalLiveScore = function() {
     let nM = parseInt(document.getElementById('modal-input-morning').value) || 0;
@@ -853,6 +860,36 @@ window.switchTab = function(name) {
     }, 50); // Timeout nhẹ để DOM kịp render hiển thị tab mới trước khi tính tọa độ
 }
 
+window.toggleLanguage = function() {
+    // 1. Đảo trạng thái ngôn ngữ
+    window.appState.currentLang = window.appState.currentLang === "vi" ? "en" : "vi";
+    
+    // 2. Thay đổi text trên chính nút Toggle
+    const langBtn = document.getElementById('lang-btn');
+    if (langBtn) {
+        langBtn.innerText = window.appState.currentLang === "vi" ? "EN" : "VI";
+    }
+
+    // 3. Quét và dịch toàn bộ các thẻ HTML có [data-vi] và [data-en]
+    window.updateLanguageUI();
+    
+    // 4. Re-render lại các dữ liệu động để ăn theo ngôn ngữ mới
+    window.renderBoard();
+    
+    // Nếu đang ở tab Lịch sử thì render lại bảng và biểu đồ
+    const panelHistory = document.getElementById('panel-history');
+    if (panelHistory && !panelHistory.classList.contains('hidden')) {
+        window.renderHistoryView();
+        window.updateChartRange();
+    }
+    
+    // Lấy câu Quote mới theo đúng ngôn ngữ
+    window.setRandomQuote();
+
+    // 5. Lưu trạng thái ngôn ngữ vào LocalStorage
+    window.save();
+}
+
 window.updateLanguageUI = function() {
     const isVi = window.appState.currentLang === "vi";
     document.querySelectorAll('[data-vi]').forEach(el => { el.innerText = isVi ? el.getAttribute('data-vi') : el.getAttribute('data-en'); });
@@ -892,8 +929,33 @@ window.closeInfoDrawer = function() {
     setTimeout(() => { overlay.classList.add('hidden'); }, 300);
 }
 
-window.handleSettleClick = function() { document.getElementById('settle-modal').classList.remove('hidden'); }
-window.closeSettleModal = function() { document.getElementById('settle-modal').classList.add('hidden'); }
+window.handleSettleClick = function() {
+    // 1. Lấy điểm số hiện tại từ bảng điều khiển
+    const scoreEl = document.getElementById('score-display');
+    let currentScore = '0';
+    if (scoreEl) {
+        currentScore = scoreEl.innerText.replace('%', ''); // Loại bỏ ký hiệu % để đưa vào thẻ số
+    }
+
+    // 2. Lấy ngày đang chọn
+    const rawDate = window.appState.selectedDate;
+
+    // 3. Đẩy dữ liệu vào Modal
+    const modalDateEl = document.getElementById('modal-settle-date');
+    const modalScoreEl = document.getElementById('modal-settle-score');
+    
+    if (modalDateEl) modalDateEl.innerText = window.formatToUIDate(rawDate);
+    if (modalScoreEl) modalScoreEl.innerText = currentScore;
+
+    // 4. Hiển thị Modal
+    document.body.style.overflow = 'hidden'; // KHÓA SCROLL
+    document.getElementById('settle-modal').classList.remove('hidden'); 
+}
+
+window.closeSettleModal = function() { 
+    document.body.style.overflow = 'auto'; // MỞ KHÓA SCROLL
+    document.getElementById('settle-modal').classList.add('hidden'); 
+}
 
 document.addEventListener('click', function (event) {
     const tooltip = document.getElementById('hint-tooltip');
