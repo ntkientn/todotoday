@@ -335,33 +335,60 @@
         </div>
     </div>
 
-    <div id="settle-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"></div>
-        <div class="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transform transition-all">
-            <div class="flex items-start gap-3 mb-4">
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-xl text-amber-600">⚠️</div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">Xác nhận chốt số liệu hôm nay?</h3>
-                    <p class="text-sm text-slate-500 mt-0.5">Hành động này sẽ tổng kết và đóng ngày hiện tại.</p>
+    <div id="settle-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeSettleModal()"></div>
+        <div class="relative bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform transition-all flex flex-col text-center">
+            
+            <!-- Icon & Title -->
+            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-indigo-50 mb-3 border border-indigo-100">
+                <span class="text-2xl">📊</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-3" data-vi="Xác nhận chốt số liệu" data-en="Confirm Settlement">Xác nhận chốt số liệu</h3>
+            
+            <!-- Main Content: Date -->
+            <p class="text-base font-medium text-slate-600" data-vi="Hành động này sẽ tổng kết và đóng số liệu cho ngày:" data-en="This action will finalize and close data for:">Hành động này sẽ tổng kết và đóng số liệu cho ngày:</p>
+            <p id="modal-settle-date" class="text-2xl font-black text-indigo-700 mt-1.5 mb-3">--/--/----</p>
+            
+            <!-- Main Content: Score -->
+            <div class="bg-slate-50 border border-slate-100 rounded-xl py-4 mb-5 shadow-inner">
+                <p class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1" data-vi="Hiệu suất đạt được" data-en="Achieved Performance">Hiệu suất đạt được</p>
+                <div class="flex items-baseline justify-center gap-1">
+                    <span id="modal-settle-score" class="text-5xl font-black text-indigo-600">0</span>
+                    <span class="text-2xl font-bold text-indigo-400">%</span>
                 </div>
             </div>
-            <div class="bg-amber-50/50 border-l-4 border-amber-500 p-4 rounded-r-xl space-y-2 mb-6">
-                <p class="text-sm text-amber-900 leading-relaxed">📌 <strong>Khi đã Settle:</strong> Bạn <span class="underline font-semibold">không thể</span> thêm, xóa sửa các task trực tiếp tại màn hình này nữa.</p>
+
+            <!-- Warning (Nâu đỏ, gạch dưới "không thể") -->
+            <div class="bg-rose-50 border border-rose-100 p-3 rounded-xl mb-6 text-left">
+                <p class="text-[13px] font-medium text-rose-700/90 leading-relaxed">
+                    📌 <span data-vi="Khi đã Settle: Bạn " data-en="Once Settled: You ">Khi đã Settle: Bạn </span><span class="underline font-bold" data-vi="không thể" data-en="cannot">không thể</span><span data-vi=" thêm, xóa sửa các task trực tiếp tại màn hình này nữa." data-en=" add, edit, or delete tasks directly on this screen."> thêm, xóa sửa các task trực tiếp tại màn hình này nữa.</span>
+                </p>
             </div>
-            <div class="flex items-center justify-end gap-3">
-                <button onclick="closeSettleModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer">Hủy bỏ</button>
-                <button onclick="confirmSettleAndSave()" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/10 transition-colors cursor-pointer">Xác nhận & Lưu</button>
+
+            <!-- Buttons -->
+            <div class="flex items-center justify-between gap-3 w-full">
+                <button onclick="closeSettleModal()" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer" data-vi="Hủy bỏ" data-en="Cancel">Hủy bỏ</button>
+                <button onclick="confirmSettleAndSave()" class="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/20 transition-colors cursor-pointer" data-vi="Xác nhận" data-en="Confirm">Xác nhận</button>
             </div>
         </div>
     </div>
 
-    <div id="exercise-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+    <div id="exercise-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
         <div class="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-5 border-b flex justify-between items-center bg-white">
-                <span class="font-bold text-lg">Hướng dẫn tập luyện</span><button onclick="closeExerciseModal()" class="p-2 hover:bg-slate-100 rounded-full">✕</button>
+            <!-- Header -->
+            <div class="p-5 border-b flex justify-between items-center bg-white shrink-0">
+                <span class="font-bold text-lg">Hướng dẫn tập luyện</span>
+                <button onclick="closeExerciseModal()" class="p-2 hover:bg-slate-100 rounded-full cursor-pointer">✕</button>
             </div>
+            
+            <!-- Content -->
             <div id="modal-container" class="flex-1 overflow-auto p-4 flex justify-center items-start bg-slate-50 overscroll-contain">
                 <img id="exercise-image" src="" class="max-w-full h-auto transition-transform duration-300 origin-top-left" onclick="toggleZoom(this)" alt="Exercise">
+            </div>
+
+            <!-- THÊM MỚI: Nút đóng ở vùng Thumb-zone (Chỉ hiện trên Mobile) -->
+            <div class="p-4 border-t border-slate-100 bg-white sm:hidden shrink-0">
+                <button onclick="closeExerciseModal()" class="w-full py-3.5 bg-slate-100 border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-200 font-bold rounded-xl active:scale-95 transition-all cursor-pointer">Đóng hướng dẫn</button>
             </div>
         </div>
     </div>
@@ -404,12 +431,14 @@
     </div>
 
     <!-- AUTH DRAWER -->
-    <div id="auth-drawer-overlay" onclick="closeAuthDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
-    <div id="auth-drawer" class="fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-[70] transform translate-x-full transition-transform duration-300 flex flex-col">
-        <div class="flex items-center justify-between p-5 border-b border-slate-100">
+    <div id="auth-drawer-overlay" onclick="closeAuthDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="auth-drawer" class="fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-[110] transform translate-x-full transition-transform duration-300 flex flex-col">
+        
+        <div class="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
             <h2 id="auth-drawer-title" class="text-lg font-bold text-slate-800" data-vi="Đăng nhập" data-en="Log In">Đăng nhập</h2>
             <button onclick="closeAuthDrawer()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex justify-center items-center rounded-full hover:bg-slate-100 transition-colors font-bold cursor-pointer">✕</button>
         </div>
+
         <div id="auth-unlogged-view" class="p-6 flex-1 overflow-y-auto">
             <p class="text-sm text-slate-500 mb-6" data-vi="Đăng nhập để đồng bộ an toàn dữ liệu của bạn trên Cloud." data-en="Log in to securely sync your data on the Cloud.">Đăng nhập để đồng bộ an toàn dữ liệu của bạn trên Cloud.</p>
             <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all cursor-pointer">
@@ -448,25 +477,23 @@
             </div>
             <button onclick="logoutFromFirebase()" class="w-full mt-auto bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-sm py-2.5 rounded-xl transition-all cursor-pointer" data-vi="Đăng xuất" data-en="Log Out">Đăng xuất</button>
         </div>
+
+        <!-- THÊM MỚI: Nút đóng ở vùng Thumb-zone (Chỉ hiện trên Mobile) -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50 sm:hidden shrink-0">
+            <button onclick="closeAuthDrawer()" class="w-full py-3.5 bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-100 font-bold rounded-xl active:scale-95 transition-all cursor-pointer" data-vi="Đóng" data-en="Close">Đóng</button>
+        </div>
     </div>
 
     <!-- ==========================================
          INFO / GUIDE DRAWER (Bảng trượt Hướng dẫn)
          ========================================== -->
-    <div id="info-drawer-overlay" onclick="closeInfoDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
-    <div id="info-drawer" class="fixed top-0 left-0 bottom-0 w-full sm:w-[460px] bg-white shadow-2xl z-[70] transform -translate-x-full transition-transform duration-300 flex flex-col">
+    <div id="info-drawer-overlay" onclick="closeInfoDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="info-drawer" class="fixed top-0 left-0 bottom-0 w-full sm:w-[460px] bg-white shadow-2xl z-[110] transform -translate-x-full transition-transform duration-300 flex flex-col">
         <!-- Header -->
-        <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
             <h2 class="text-lg font-black text-slate-800 flex items-center gap-2.5">
-                <!-- SVG Logo TodoToday -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-6 h-6 drop-shadow-sm shrink-0">
-                    <circle cx="50" cy="50" r="50" fill="#6366f1"/>
-                    <circle cx="50" cy="50" r="39" fill="#eeeeff"/>
-                    <circle cx="50" cy="50" r="33" fill="#9333ea"/>
-                    <circle cx="50" cy="50" r="21" fill="#fafa00"/>
-                    <circle cx="50" cy="50" r="14" fill="#dc2626"/>
-                    <path d="M50 4 v92 M4 50 h92" stroke="#0f172a" stroke-width="2"/>
-                    <path d="M48 2 h4 v8 h-4 z" fill="#0f172a"/>
+                    <circle cx="50" cy="50" r="50" fill="#6366f1"/><circle cx="50" cy="50" r="39" fill="#eeeeff"/><circle cx="50" cy="50" r="33" fill="#9333ea"/><circle cx="50" cy="50" r="21" fill="#fafa00"/><circle cx="50" cy="50" r="14" fill="#dc2626"/><path d="M50 4 v92 M4 50 h92" stroke="#0f172a" stroke-width="2"/><path d="M48 2 h4 v8 h-4 z" fill="#0f172a"/>
                 </svg>
                 TodoToday
             </h2>
@@ -524,6 +551,10 @@
                     </li>
                 </ol>
             </div>
+        </div>
+        <!-- THÊM MỚI: Nút đóng ở vùng Thumb-zone (Chỉ hiện trên Mobile) -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50 sm:hidden shrink-0">
+            <button onclick="closeInfoDrawer()" class="w-full py-3.5 bg-white border border-slate-200 shadow-sm text-slate-700 hover:bg-slate-100 font-bold rounded-xl active:scale-95 transition-all cursor-pointer" data-vi="Đóng" data-en="Close">Đóng</button>
         </div>
     </div>
 
