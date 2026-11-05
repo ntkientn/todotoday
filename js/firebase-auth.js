@@ -115,21 +115,28 @@ onAuthStateChanged(auth, async (user) => {
                 if (localCompare !== cloudCompare) {
                     
                     // 2. TỰ ĐỘNG HỢP NHẤT (Auto-Merge)
+                    // 1. HỢP NHẤT LỊCH SỬ (History Merge)
                     const historyMap = new Map();
                     if (Array.isArray(window.appState.history)) window.appState.history.forEach(item => { if (item.date) historyMap.set(item.date, item); });
                     if (Array.isArray(cloudData.history)) cloudData.history.forEach(item => { if (item.date) historyMap.set(item.date, item); });
                     window.appState.history = Array.from(historyMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
 
+                    // 2. HỢP NHẤT BẢNG CÔNG VIỆC 3 NGÀY (DailyBoards Merge)
                     if (!window.appState.dailyBoards) window.appState.dailyBoards = {};
                     if (cloudData.dailyBoards) {
                         for (const dateKey in cloudData.dailyBoards) {
-                            window.appState.dailyBoards[dateKey] = cloudData.dailyBoards[dateKey];
+                            const cloudBoard = cloudData.dailyBoards[dateKey];
+                            const localBoard = window.appState.dailyBoards[dateKey];
+                            
+                            if (!localBoard || (!localBoard.morning?.length && !localBoard.afternoon?.length && !localBoard.evening?.length)) {
+                                window.appState.dailyBoards[dateKey] = cloudBoard;
+                            }
                         }
                     }
-                    // GỌI HÀM KIỂM TRA ĐỂ SỬA NGÀY LÀM VIỆC NẾU DATA MỚI TỪ CLOUD ĐÃ CHỐT (FIX BUG)
-                    if (typeof window.validateAndAutoShiftDate === 'function') {
-                        window.validateAndAutoShiftDate();
-                    }
+
+                    // Chạy dọn rác và kiểm tra ngày làm việc
+                    if (typeof window.cleanStaleBoards === 'function') window.cleanStaleBoards();
+                    if (typeof window.validateAndAutoShiftDate === 'function') window.validateAndAutoShiftDate();
                     
                     // 3. LƯU & RENDER LẠI GIAO DIỆN
                     window.save(); 
@@ -152,7 +159,7 @@ onAuthStateChanged(auth, async (user) => {
                             toast.classList.add('-translate-y-[150%]', 'opacity-0');
                         }, 5000);
                     }
-                    console.log("Auto-merged new data from Cloud.");
+                    console.log("Auto-merged 3-day data from Cloud.");
                 } else {
                     console.log("Local and Cloud data are identical. No merge needed.");
                 }
