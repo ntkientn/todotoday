@@ -274,7 +274,7 @@ window.cleanStaleBoards = function() {
     const todayStr = window.getLocalTodayString();
     const today = new Date(todayStr + 'T00:00:00');
     
-    // Tạo danh sách các mốc ngày được phép giữ lại task (3 ngày gần nhất: hôm nay, hôm qua, hôm kia)
+    // 1. Xác định mảng 3 ngày gần nhất được phép giữ task (Hôm nay, Hôm qua, Hôm kia)
     const allowedDates = new Set();
     for (let i = 0; i < 3; i++) {
         const d = new Date(today);
@@ -285,18 +285,31 @@ window.cleanStaleBoards = function() {
         allowedDates.add(`${y}-${m}-${day}`);
     }
     
-    // Lọc dailyBoards: Chỉ giữ lại các ngày trong vòng 3 ngày gần nhất HOẶC ngày đang chọn (selectedDate)
     const cleanedBoards = {};
     for (const dateKey in window.appState.dailyBoards) {
         const b = window.appState.dailyBoards[dateKey];
-        const hasTasks = b && ((b.morning && b.morning.length > 0) || (b.afternoon && b.afternoon.length > 0) || (b.evening && b.evening.length > 0));
         
-        if (allowedDates.has(dateKey) || dateKey === window.appState.selectedDate) {
-            if (hasTasks || dateKey === window.appState.selectedDate) {
-                cleanedBoards[dateKey] = b;
-            }
+        // Kiểm tra xem ngày này có chứa task thật sự không
+        const hasTasks = b && (
+            (Array.isArray(b.morning) && b.morning.length > 0) || 
+            (Array.isArray(b.afternoon) && b.afternoon.length > 0) || 
+            (Array.isArray(b.evening) && b.evening.length > 0)
+        );
+        
+        // Điều kiện giữ lại:
+        // - Phải là ngày nằm trong 3 ngày gần nhất HOẶC là ngày user đang chọn thao tác (selectedDate)
+        // - VÀ ngày đó bắt buộc phải có task (loại bỏ hoàn toàn các ngày trống rỗng / rác)
+        if ((allowedDates.has(dateKey) || dateKey === window.appState.selectedDate) && hasTasks) {
+            
+            // Chuẩn hóa lại object ngày để tránh bị trùng lặp key (như lỗi lặp khóa morning anh vừa gặp)
+            cleanedBoards[dateKey] = {
+                morning: Array.isArray(b.morning) ? b.morning : [],
+                afternoon: Array.isArray(b.afternoon) ? b.afternoon : [],
+                evening: Array.isArray(b.evening) ? b.evening : []
+            };
         }
     }
+    
     window.appState.dailyBoards = cleanedBoards;
 }
 
