@@ -269,11 +269,47 @@ window.importBackupData = function(event) {
     reader.readAsText(file);
 }
 
+window.cleanStaleBoards = function() {
+    if (!window.appState.dailyBoards) return;
+    const todayStr = window.getLocalTodayString();
+    const today = new Date(todayStr + 'T00:00:00');
+    
+    // Tạo danh sách các mốc ngày được phép giữ lại task (3 ngày gần nhất: hôm nay, hôm qua, hôm kia)
+    const allowedDates = new Set();
+    for (let i = 0; i < 3; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        allowedDates.add(`${y}-${m}-${day}`);
+    }
+    
+    // Lọc dailyBoards: Chỉ giữ lại các ngày trong vòng 3 ngày gần nhất HOẶC ngày đang chọn (selectedDate)
+    const cleanedBoards = {};
+    for (const dateKey in window.appState.dailyBoards) {
+        const b = window.appState.dailyBoards[dateKey];
+        const hasTasks = b && ((b.morning && b.morning.length > 0) || (b.afternoon && b.afternoon.length > 0) || (b.evening && b.evening.length > 0));
+        
+        if (allowedDates.has(dateKey) || dateKey === window.appState.selectedDate) {
+            if (hasTasks || dateKey === window.appState.selectedDate) {
+                cleanedBoards[dateKey] = b;
+            }
+        }
+    }
+    window.appState.dailyBoards = cleanedBoards;
+}
+
 window.save = function() { 
-    // 1. Luôn lưu vào LocalStorage để làm bộ đệm Offline
+    // 1. Chạy cơ chế dọn rác trước khi lưu
+    if (typeof window.cleanStaleBoards === 'function') {
+        window.cleanStaleBoards();
+    }
+
+    // 2. Lưu vào LocalStorage để làm bộ đệm Offline
     localStorage.setItem('todotoday_chart_v7', JSON.stringify(window.appState)); 
     
-    // 2. Nếu đang có user đăng nhập -> Đẩy lên Cloud Firestore
+    // 3. Đẩy lên Cloud Firestore
     if (window.currentFirebaseUser && typeof window.saveToCloud === 'function') {
         window.saveToCloud(window.appState);
     }
