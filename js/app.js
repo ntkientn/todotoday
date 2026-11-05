@@ -159,13 +159,27 @@ window.initApp = async function() {
         window.appState.dailyBoards = localState.dailyBoards || {};
         window.appState.history = localState.history || [];
         
+        // 1. Quét tìm ngày trong quá khứ còn task dở dang nhưng chưa Settle
         let unsettledDate = null;
-        for (const dateKey in window.appState.dailyBoards) {
-            const dayData = window.appState.dailyBoards[dateKey];
-            if (dayData && ((dayData.morning && dayData.morning.length > 0) || (dayData.afternoon && dayData.afternoon.length > 0) || (dayData.evening && dayData.evening.length > 0))) {
-                unsettledDate = dateKey; break; 
+        const historyDates = window.appState.history.map(h => h.date);
+        
+        // Lấy danh sách các ngày có task trong dailyBoards sắp xếp từ cũ đến mới
+        const sortedBoardDates = Object.keys(window.appState.dailyBoards).sort();
+        for (const dateKey of sortedBoardDates) {
+            // Nếu ngày này chưa nằm trong History và có chứa ít nhất 1 task
+            if (!historyDates.includes(dateKey)) {
+                const dayData = window.appState.dailyBoards[dateKey];
+                const hasTasks = dayData && ((dayData.morning && dayData.morning.length > 0) || 
+                                 (dayData.afternoon && dayData.afternoon.length > 0) || 
+                                 (dayData.evening && dayData.evening.length > 0));
+                if (hasTasks) {
+                    unsettledDate = dateKey;
+                    break; 
+                }
             }
         }
+
+        // Neo về ngày chưa Settle, nếu không có thì lấy ngày cũ hoặc ngày hôm nay
         window.appState.selectedDate = unsettledDate ? unsettledDate : (localState.selectedDate || localToday);
     } else {
         window.appState.selectedDate = localToday;
@@ -173,7 +187,6 @@ window.initApp = async function() {
         window.appState.history = [];
     }
 
-    // GỌI HÀM KIỂM TRA NGAY KHI VỪA KHỞI ĐỘNG (FIX BUG)
     window.validateAndAutoShiftDate();
     window.ensureStructure(window.appState.selectedDate);
 
@@ -190,6 +203,19 @@ window.initApp = async function() {
     try { if(typeof window.updateLanguageUI === 'function') window.updateLanguageUI(); } catch(e) {}
     
     window.renderBoard(); 
+
+    // Nhắc nhở nếu neo lại ngày cũ chưa chốt
+    if (window.appState.selectedDate < localToday) {
+        const isVi = window.appState.currentLang === "vi";
+        setTimeout(() => {
+            window.customAlert(
+                isVi 
+                ? `📌 Nhắc nhở: Ngày [${window.formatToUIDate(window.appState.selectedDate)}] của bạn chưa được chốt sổ. Hãy kiểm tra công việc và bấm "Tổng Kết & Lưu"!` 
+                : `📌 Reminder: Date [${window.formatToUIDate(window.appState.selectedDate)}] has not been settled yet. Please review and click "Settle & Save"!`,
+                isVi ? "Chưa chốt sổ" : "Unsettled Date"
+            );
+        }, 300);
+    }
 }
 
 window.exportBackupData = async function() {
@@ -602,9 +628,91 @@ window.openEditModal = function(dateStr) {
     document.getElementById('modal-input-afternoon').value = targetLog.afternoonScore !== undefined ? targetLog.afternoonScore : targetLog.score;
     document.getElementById('modal-input-evening').value = targetLog.eveningScore !== undefined ? targetLog.eveningScore : targetLog.score;
     
+    // Kiểm tra điều kiện 3 ngày gần nhất để hiện nút "Mở lại ngày"
+    const today = new Date(window.getLocalTodayString());
+    const targetDate = new Date(dateStr);
+    const diffTime = Math.abs(today - targetDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const btnReopen = document.getElementById('btn-reopen-day');
+    if (btnReopen) {
+        // Nếu nằm trong khoảng 3 ngày (hôm nay, hôm qua, hôm kia) -> Cho phép mở lại
+        if (diffDays <= 2) {
+            btnReopen.classList.remove('hidden');
+        } else {
+            btnReopen.classList.add('hidden');
+        }
+    }
+
     window.calculateModalLiveScore();
     document.body.style.overflow = 'hidden'; // KHÓA SCROLL
     document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+// HÀM MỚI 1: Mở lại ngày làm việc (Re-open Workboard)
+window.reopenWorkboardFromModal = async function() {
+    const isVi = window.appState.currentLang === "vi";
+    const dateStr = document.getElementById('modal-target-date').value;
+    if (!dateStr) return;
+
+    const confirmReopen = await window.customConfirm(
+        isVi 
+        ? `Bạn có chắc muốn mở lại ngày [${window.formatToUIDate(dateStr)}]?\n\n📌 Record ngày này sẽ được gỡ khỏi Lịch Sử để bạn cập nhật task và Settle lại.` 
+        : `Re-open workboard for [${window.formatToUIDate(dateStr)}]?\n\n📌 This record will be removed from History so you can update tasks and Settle again.`
+    );
+
+    if (!confirmReopen) return;
+
+    // 1. Gỡ ngày này khỏi Lịch sử
+    window.appState.history = window.appState.history.filter(h => h.date !== dateStr);
+
+    // 2. Chuyển view về ngày được chọn
+    window.appState.selectedDate = dateStr;
+    window.ensureStructure(dateStr);
+
+    // 3. Đóng Modal, Lưu & Cập nhật UI
+    window.closeEditModal();
+    window.save();
+
+    // Chuyển sang Tab Bảng Công Việc
+    window.switchTab('today');
+
+    // Cập nhật date picker
+    try {
+        const picker = document.getElementById('date-picker');
+        const displayText = document.getElementById('date-display-text');
+        if (picker) picker.value = dateStr;
+        if (displayText) displayText.innerText = window.formatToUIDate(dateStr);
+        if (typeof window.toggleGotoTodayButtonVisibility === 'function') window.toggleGotoTodayButtonVisibility();
+    } catch(e) {}
+
+    window.renderBoard();
+}
+
+// HÀM MỚI 2: Xóa bản ghi Lịch sử
+window.deleteHistoryRecordFromModal = async function() {
+    const isVi = window.appState.currentLang === "vi";
+    const dateStr = document.getElementById('modal-target-date').value;
+    if (!dateStr) return;
+
+    const confirmDelete = await window.customConfirm(
+        isVi 
+        ? `⚠️ XÁC NHẬN XÓA:\nBạn có chắc chắn muốn xóa bản ghi lịch sử ngày [${window.formatToUIDate(dateStr)}] không? Hành động này không thể hoàn tác.` 
+        : `⚠️ CONFIRM DELETE:\nAre you sure you want to delete history record for [${window.formatToUIDate(dateStr)}]? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    // Xóa record trong mảng history
+    window.appState.history = window.appState.history.filter(h => h.date !== dateStr);
+
+    window.closeEditModal();
+    window.save();
+
+    // Render lại giao diện tab Lịch sử
+    window.buildYearFilterOptions();
+    window.renderHistoryView();
+    if (typeof window.updateChartRange === 'function') window.updateChartRange();
 }
 
 window.closeEditModal = function() { 
